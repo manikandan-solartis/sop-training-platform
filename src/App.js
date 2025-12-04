@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText, MessageCircle, BookOpen, Globe, CheckCircle2, Menu, X, Search, LogOut, BarChart3, Users } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Send, FileText, Menu, X } from 'lucide-react';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null);
   const [language, setLanguage] = useState('en');
   const [selectedSOP, setSelectedSOP] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -33,8 +32,6 @@ const App = () => {
 
   const handleLogin = () => {
     if (loginEmail && loginPassword) {
-      const role = loginEmail.includes('admin') ? 'admin' : 'user';
-      setUserRole(role);
       setIsLoggedIn(true);
       setCurrentView('sop-list');
     }
@@ -138,6 +135,7 @@ const App = () => {
               </div>
             ))}
             {loading && <p className="text-gray-500">Thinking...</p>}
+            <div ref={messagesEndRef} />
           </div>
           <div className="bg-white p-4 flex gap-2">
             <input type="text" value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendMessage()} placeholder={t.askQuestion} className="flex-1 px-4 py-2 border rounded-lg" />
