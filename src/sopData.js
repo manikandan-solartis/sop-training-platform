@@ -268,7 +268,6 @@ Note format: MM/DD/YYYY- Sent YYYY term to direct collections team in MM.DD.YYYY
 
 **Escalation:** surety.accounting@rlicorp.com`,
     keywords: ['shift+f1', 'collections', 'my bond center', 'f6', 'rlink3', 'wins', 'notes needed', 'direct collect', 'surety operations', 'total due']
-  }
 };
 
 ,
