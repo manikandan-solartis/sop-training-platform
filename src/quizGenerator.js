@@ -1,18 +1,17 @@
-// Master Quiz Index - Import all individual quiz files here
-import agencyCheckQuiz from './agency-check-request-quiz';
-import agentStatementQuiz from './agent-statement-requests-quiz';
-import collectionsQuiz from './collections-quiz';
+// Quiz Generator Module - Now imports from modular quizzes/ folder
+import { quizData } from './quizzes';
 
-// To add a new quiz:
-// 1. Create new file: src/quizzes/your-sop-name-quiz.js
-// 2. Import it here: import yourQuizName from './your-sop-name-quiz';
-// 3. Add to quizData object below matching the SOP ID
+export { quizData };
 
-export const quizData = {
-  'agency-check-request': agencyCheckQuiz,
-  'agent-statement-requests': agentStatementQuiz,
-  'collections-rlink-wins-notes': collectionsQuiz
-  // Add more quizzes here as: 'sop-id': quizVariableName,
+export const generateQuiz = (sopId) => {
+  const questions = quizData[sopId] || [];
+  // Shuffle and return random 10 questions
+  return questions.sort(() => Math.random() - 0.5).slice(0, 10);
 };
 
-export default quizData;
+export default generateQuiz;
+
+// To add new quizzes:
+// 1. Create: src/quizzes/your-sop-name-quiz.js
+// 2. Update: src/quizzes/index.js (add import and entry)
+// That's it! No need to touch this file.
