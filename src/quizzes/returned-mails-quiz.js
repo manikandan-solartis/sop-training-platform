@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the daily volume forecast?', options: ['5 to 10', '15 to 20', '25 to 30', '35 to 40'], correct: 1 },
+  { q: 'What is the SLA for returned mails?', options: ['12 hours', '24 hours from receipt', '48 hours', '72 hours'], correct: 1 },
+  { q: 'Where are daily scans located?', options: ['Desktop', 'P:\\Returned mail\\Spreadsheet folder\\Daily Scans', 'C:\\Scans', 'Email inbox'], correct: 1 },
+  { q: 'What Excel file should be updated?', options: ['Daily Log', 'Solartis Return Mail Log', 'Mail Tracker', 'Invoice Log'], correct: 1 },
+  { q: 'Where is agency email found?', options: ['Duck Creek', 'Producer Notice document in RLI Enterprise Inquiry', 'WINS', 'Excel file'], correct: 1 },
+  { q: 'What tab in Duck Creek for address update?', options: ['Account', 'Payee', 'Policy', 'Billing'], correct: 1 },
+  { q: 'After how many days should follow-up be sent?', options: ['3 business days', '5 business days', '7 business days', '10 business days'], correct: 1 },
+  { q: 'What status for no response after follow-up?', options: ['Pending', 'Completed', 'No response', 'Cancelled'], correct: 2 },
+  { q: 'What prefixes go to marine.support@rlicorp.com?', options: ['RHO, DFP', 'CAR, EMA, HUL, IMA, MAP, MEX, MLP, MRP', 'APO, BPO, PPO', 'All prefixes'], correct: 1 },
+  { q: 'What prefixes go to RLIPack.Document@rlicorp.com?', options: ['CAR, EMA', 'RHO, DFP', 'APO, BPO, PPO, WPO, XPO', 'MAP, MEX'], correct: 2 },
+  { q: 'For Hawaii policies (RHO/DFP), where to find agent email?', options: ['Producer Notice', 'Agency Extended Data', 'Duck Creek Payee tab', 'Excel file'], correct: 1 },
+  { q: 'What should be attached to email to agent?', options: ['NKLL form', 'Copy of most recent invoice', 'Policy document', 'Payment receipt'], correct: 1 },
+  { q: 'If agent says address is correct, what to note?', options: ['Address updated', 'Agent states address is correct', 'No change needed', 'Confirmed'], correct: 1 },
+  { q: 'What to click after entering address in Duck Creek?', options: ['Submit', 'Save', 'Update', 'Confirm'], correct: 1 },
+  { q: 'What email box to send from?', options: ['Personal email', 'Premium Accounting', 'Surety Accounting', 'Enterprise Billing'], correct: 1 },
+  { q: 'What is the subject line format?', options: ['Returned Mail', 'Account Number/Policy Number/Name on Account', 'Address Update', 'Invoice Return'], correct: 1 },
+  { q: 'What document type to look for in RLI Enterprise Inquiry?', options: ['Policy Notice', 'Producer Notice', 'Billing Notice', 'Agent Notice'], correct: 1 },
+  { q: 'What to do after second email with no response?', options: ['Call agent', 'Mark No response and stop', 'Escalate to manager', 'Keep emailing'], correct: 1 },
+  { q: 'Where to find RLI Producer Reference for Hawaii?', options: ['Payee tab', 'Policy Extended Data', 'Account summary', 'Documents'], correct: 1 },
+  { q: 'Who is Level 1 escalation contact?', options: ['Ashley Seidel', 'Jennifer Hasse', 'Kelly Barnard', 'Bob Ogle'], correct: 1 }
+];
