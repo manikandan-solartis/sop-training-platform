@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the processing frequency for Monthly Collections Notes?', options: ['Weekly', 'Monthly', 'Quarterly', 'Daily'], correct: 1 },
+  { q: 'Which tab should be updated in the Collections Report?', options: ['Summary', 'Notes Needed', 'Collections', 'Details'], correct: 1 },
+  { q: 'What keyboard shortcut opens Notes section in WINS?', options: ['F1', 'Shift + F1', 'Ctrl + N', 'Alt + N'], correct: 1 },
+  { q: 'What number should you press to view a note in WINS?', options: ['1', '2', '5', '8'], correct: 2 },
+  { q: 'What number should you press to revise a note in WINS?', options: ['1', '2', '5', '8'], correct: 1 },
+  { q: 'What key saves the note in WINS?', options: ['F4', 'F6', 'F8', 'F12'], correct: 1 },
+  { q: 'How many Collections notes should exist in WINS?', options: ['Multiple allowed', 'Only ONE', 'At least two', 'No limit'], correct: 1 },
+  { q: 'What is the title of collections note in ARLink?', options: ['Collections', 'Direct Collect', 'Monthly Notes', 'Payment Notes'], correct: 1 },
+  { q: 'What should Owner be set to in ARLink?', options: ['Collections Team', 'Surety Operations', 'Accounting', 'Underwriting'], correct: 1 },
+  { q: 'Are reminders needed in ARLink notes?', options: ['Yes, 7 days', 'Yes, 30 days', 'No reminders needed', 'Yes, 14 days'], correct: 2 },
+  { q: 'What to mark in Excel WINS column for updates?', options: ['DONE', 'Updated', 'COMPLETE', 'CHECKED'], correct: 1 },
+  { q: 'What to mark in Excel WINS column for new notes?', options: ['NEW', 'C New', 'CREATE', 'FRESH'], correct: 1 },
+  { q: 'What to mark in Excel ARLink column for consolidated updates?', options: ['UPDATED', 'UC', 'CONS', 'MERGED'], correct: 1 },
+  { q: 'What keys navigate through notes in WINS?', options: ['Arrow keys', 'Tab/Shift+Tab', 'Page Up/Down', 'Home/End'], correct: 2 },
+  { q: 'Where is the Collections Report file located?', options: ['Desktop', 'P:\\Surety\\Collections\\[Year]\\[Month]\\', 'C:\\Reports', 'Shared Drive'], correct: 1 },
+  { q: 'What to do if multiple Collections notes exist?', options: ['Keep all', 'Consolidate and delete older', 'Delete all', 'Mark as duplicate'], correct: 1 },
+  { q: 'What format for year amounts in notes?', options: ['Year: Amount', '[Year]: $[Amount]', 'Year - Amount', '$Amount (Year)'], correct: 1 },
+  { q: 'If no ARLink note exists, what should you do?', options: ['Create new', 'Email Surety Accounting', 'Skip bond', 'Update WINS only'], correct: 1 },
+  { q: 'What should duplicate ARLink notes be marked as?', options: ['Delete', 'Archive', 'Do Not Use', 'Old'], correct: 2 },
+  { q: 'Who should you contact for questions?', options: ['IT Support', 'Kelly or Surety Accounting Team', 'Manager', 'Underwriter'], correct: 1 }
+];

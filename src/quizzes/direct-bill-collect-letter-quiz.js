@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the processing schedule for Direct Bill Collect Letter?', options: ['Daily', 'Weekly', 'Monthly', 'Quarterly'], correct: 2 },
+  { q: 'What is the volume forecast per week?', options: ['50-75', '120-150', '200-250', '300-350'], correct: 1 },
+  { q: 'What document is used for Probate Final Notice?', options: ['L00HQ', 'L00HR', 'M00DF', 'L00CA'], correct: 1 },
+  { q: 'What is the reminder period for the first letter?', options: ['10 days', '20 days', '30 days', '45 days'], correct: 2 },
+  { q: 'What is the reminder period for the second letter?', options: ['10 days', '20 days', '30 days', '45 days'], correct: 1 },
+  { q: 'Which user should be selected when creating letters?', options: ['Kelly Barnard', 'Megan Mazzeffi', 'Danielle Moore', 'Surety Accounting'], correct: 1 },
+  { q: 'For TEX01 and FLS01, which Surety office should be chosen?', options: ['IL', 'PA', 'TX', 'WA'], correct: 2 },
+  { q: 'What key should you press to verify billing address?', options: ['F2', 'F4', 'F6', 'F8'], correct: 1 },
+  { q: 'What agent code should NOT receive emails?', options: ['00983', '00984', '00985', '00986'], correct: 1 },
+  { q: 'What is the Non-Probate first letter document code?', options: ['L00HR', 'L00HQ', 'M00DF', 'L00CA'], correct: 2 },
+  { q: 'What is the Non-Probate second letter document code?', options: ['L00HR', 'L00HQ', 'M00DF', 'L00CA'], correct: 3 },
+  { q: 'For CBS bonds, what email should be used?', options: ['surety.accounting@rlicorp.com', 'bonds@cbalaw.org', 'Kelly.Barnard@rlicorp.com', 'Danielle.Moore@rlicorp.com'], correct: 1 },
+  { q: 'How many Direct Collect notes should exist per bond?', options: ['Multiple allowed', 'Only ONE', 'At least two', 'None'], correct: 1 },
+  { q: 'What date format should be used in RLink notes?', options: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD', 'DD-MM-YY'], correct: 1 },
+  { q: 'What type should be selected for notes?', options: ['General Notes', 'Issue - Accounting Notes', 'Payment Notes', 'Collection Notes'], correct: 1 },
+  { q: 'What needs verification before sending letter?', options: ['Only address', 'Only premium', 'Bond Number, Premium, Address', 'Only bond number'], correct: 2 },
+  { q: 'CBS bonds agent code starts with:', options: ['F6', 'F7', 'F8', 'F9'], correct: 2 },
+  { q: 'What status should bond be in WINS?', options: ['Active', 'Cancelled', 'Renewal in Progress', 'Pending'], correct: 2 },
+  { q: 'If address does not match, what should be selected?', options: ['Skip address update', 'Has any other information changed - Yes', 'Cancel letter', 'Email client'], correct: 1 },
+  { q: 'What is the escalation email?', options: ['help@rlicorp.com', 'surety.accounting@rlicorp.com', 'support@rlicorp.com', 'admin@rlicorp.com'], correct: 1 }
+];

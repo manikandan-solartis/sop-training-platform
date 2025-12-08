@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the processing schedule for Hawaii Refund Report?', options: ['Daily', 'Weekly', 'Monthly', 'Quarterly'], correct: 1 },
+  { q: 'What is the volume forecast per week?', options: ['50-100 cases', '200-300 cases', '400-500 cases', '600-700 cases'], correct: 1 },
+  { q: 'What Bill Product code is filtered?', options: ['100', '180', '320', '420'], correct: 2 },
+  { q: 'Which column should be deleted?', options: ['Column A', 'Column B', 'Column C (Policy Product Name)', 'Column D'], correct: 2 },
+  { q: 'Bill Product column should be renamed to:', options: ['Account', 'Policy', 'Number', 'Code'], correct: 1 },
+  { q: 'Bill Type column should be renamed to:', options: ['Status', 'Notes', 'Action', 'Comments'], correct: 1 },
+  { q: 'What formula is used in Column E?', options: ['=VLOOKUP(A2, $A:$H, 5, TRUE)', '=VLOOKUP(A2, [HIHO Master File]Sheet1!$A:$H, 5, FALSE)', '=LOOKUP(A2, $A:$H)', '=INDEX(A2, 5)'], correct: 1 },
+  { q: 'What should be done with #N/A values in Column G?', options: ['Keep them', 'Delete all rows with #N/A', 'Replace with 0', 'Flag for review'], correct: 1 },
+  { q: 'If NKLL request done twice, what Action?', options: ['Email', 'Hold', 'Regular Refund', 'External'], correct: 2 },
+  { q: 'How many days to wait before changing to Regular Refund?', options: ['5 days', '7 days', '10+ days', '15 days'], correct: 2 },
+  { q: 'If Allocation Date is 9 days or less, mark as:', options: ['Regular Refund', 'Refund in 10 Days', 'Email', 'External'], correct: 1 },
+  { q: 'If Payor is AOAO in Duck Creek, Action should be:', options: ['Regular', 'External', 'Cashops', 'HIHO'], correct: 1 },
+  { q: 'In WINS, if Can Dt/Code = 08, Action is:', options: ['Regular only', 'External or Cashops', 'Email', 'HIHO'], correct: 1 },
+  { q: 'If Notes mention "Hold per [Name]", Action should be:', options: ['Regular', 'External', 'HIHO', 'Email'], correct: 2 },
+  { q: 'How should duplicates be identified?', options: ['Manual review', 'Conditional Formatting', 'Sort by date', 'Color coding'], correct: 1 },
+  { q: 'If payment source does not match policy, Action is:', options: ['Regular', 'External with comment', 'Email', 'Hold'], correct: 1 },
+  { q: 'Before processing refund, what must be checked in WINS?', options: ['Policy status', 'Outstanding balances', 'Agent code', 'Premium amount'], correct: 1 },
+  { q: 'If last payment is older than 6 months, use:', options: ['Regular refund', 'External', 'Refund to Check', 'Email'], correct: 2 },
+  { q: 'What is the SLA for this process?', options: ['Same day', '1 Business Day', '2 Business Days', '1 week'], correct: 1 },
+  { q: 'Who is the Level 1 escalation contact?', options: ['Ashley Seidel', 'Kathy Ard', 'Jennifer Hasse', 'Bob Ogle'], correct: 1 }
+];
