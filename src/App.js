@@ -6,9 +6,16 @@ import { generateQuiz } from './quizGenerator';
 
 // Valid credentials - In production, this should be in a backend
 const VALID_CREDENTIALS = [
-  { email: 'admin@solartis.com', password: 'admin123', name: 'Admin User' },
-  { email: 'trainer@solartis.com', password: 'trainer123', name: 'Trainer' },
-  { email: 'user@solartis.com', password: 'user123', name: 'Regular User' }
+  { email: 'admin@solartis.com', password: 'admin123', name: 'Admin User', role: 'admin' },
+  { email: 'user1@solartis.com', password: 'user123', name: 'User 1', role: 'user' },
+  { email: 'user2@solartis.com', password: 'user123', name: 'User 2', role: 'user' },
+  { email: 'user3@solartis.com', password: 'user123', name: 'User 3', role: 'user' },
+  { email: 'user4@solartis.com', password: 'user123', name: 'User 4', role: 'user' },
+  { email: 'user5@solartis.com', password: 'user123', name: 'User 5', role: 'user' },
+  { email: 'user6@solartis.com', password: 'user123', name: 'User 6', role: 'user' },
+  { email: 'user7@solartis.com', password: 'user123', name: 'User 7', role: 'user' },
+  { email: 'user8@solartis.com', password: 'user123', name: 'User 8', role: 'user' },
+  { email: 'user9@solartis.com', password: 'user123', name: 'User 9', role: 'user' }
 ];
 
 const App = () => {
@@ -199,12 +206,8 @@ const App = () => {
           </form>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
-            <div className="text-xs text-blue-800 space-y-1">
-              <p>• admin@solartis.com / admin123</p>
-              <p>• trainer@solartis.com / trainer123</p>
-              <p>• user@solartis.com / user123</p>
-            </div>
+            <p className="text-xs font-semibold text-blue-900 mb-2">Need Help?</p>
+            <p className="text-xs text-blue-800">Contact your administrator for login credentials.</p>
           </div>
         </div>
       </div>
@@ -238,23 +241,27 @@ const App = () => {
               <h2 className="text-4xl font-bold">SOP Library</h2>
               <p className="text-gray-600 mt-2">{Object.keys(sopDatabase).length} SOPs Available</p>
             </div>
-            <button 
-              onClick={() => setShowUploadModal(true)} 
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
-            >
-              <Upload size={20} /> Upload SOP
-            </button>
+            {currentUser.role === 'admin' && (
+              <button 
+                onClick={() => setShowUploadModal(true)} 
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
+              >
+                <Upload size={20} /> Upload SOP
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.values(sopDatabase).map(sop => (
               <div key={sop.id} className="bg-white rounded-xl shadow-lg p-6 relative group hover:shadow-xl transition-shadow">
-                <button 
-                  onClick={() => handleDeleteSOP(sop.id)} 
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-opacity"
-                >
-                  <Trash2 size={18} />
-                </button>
+                {currentUser.role === 'admin' && (
+                  <button 
+                    onClick={() => handleDeleteSOP(sop.id)} 
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-opacity"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
                 <div className="flex justify-between mb-4">
                   <FileText className="text-blue-600" size={36} />
                   <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
