@@ -2,6 +2,9 @@
 import agencyCheckRequest from './agency-check-request';
 import agentStatementRequests from './agent-statement-requests';
 import collectionsRlinkWins from './collections-rlink-wins-notes';
+import directBillCollectLetter from './direct-bill-collect-letter';
+import duckCreekRefunds from './duck-creek-refunds';
+import hawaiiRefundReport from './hawaii-refund-report';
 
 // To add a new SOP:
 // 1. Create new file: src/sops/your-sop-name.js
@@ -11,7 +14,10 @@ import collectionsRlinkWins from './collections-rlink-wins-notes';
 export const sopData = {
   'agency-check-request': agencyCheckRequest,
   'agent-statement-requests': agentStatementRequests,
-  'collections-rlink-wins-notes': collectionsRlinkWins
+  'collections-rlink-wins-notes': collectionsRlinkWins,
+  'direct-bill-collect-letter': directBillCollectLetter,
+  'duck-creek-refunds': duckCreekRefunds,
+  'hawaii-refund-report': hawaiiRefundReport
   // Add more SOPs here as: 'sop-id': sopVariableName,
 };
 
