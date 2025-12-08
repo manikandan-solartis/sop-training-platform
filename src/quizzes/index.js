@@ -9,6 +9,9 @@ import monthlyCollectionsNotesQuiz from './monthly-collections-notes-quiz';
 import nsfProcessingQuiz from './nsf-processing-quiz';
 import nkllRequestQuiz from './nkll-request-quiz';
 import returnedMailsQuiz from './returned-mails-quiz';
+import specialMarketsFormattingQuiz from './special-markets-formatting-quiz';
+import specialtyNettingQuiz from './specialty-netting-quiz';
+import specialtyReturnedItemQuiz from './specialty-returned-item-quiz';
 
 // To add a new quiz:
 // 1. Create new file: src/quizzes/your-sop-name-quiz.js
@@ -25,7 +28,10 @@ export const quizData = {
   'monthly-collections-notes': monthlyCollectionsNotesQuiz,
   'nsf-processing': nsfProcessingQuiz,
   'nkll-request': nkllRequestQuiz,
-  'returned-mails': returnedMailsQuiz
+  'returned-mails': returnedMailsQuiz,
+  'special-markets-formatting': specialMarketsFormattingQuiz,
+  'specialty-netting': specialtyNettingQuiz,
+  'specialty-returned-item': specialtyReturnedItemQuiz
   // Add more quizzes here as: 'sop-id': quizVariableName,
 };
 
