@@ -3,9 +3,11 @@ import agencyCheckRequestQuiz from './agency-check-request-quiz';
 import agentStatementRequestsQuiz from './agent-statement-requests-quiz';
 import collectionsRlinkWinsQuiz from './collections-rlink-wins-notes-quiz';
 import directBillCollectLetterQuiz from './direct-bill-collect-letter-quiz';
+import directBillWeeklyRefundQuiz from './direct-bill-weekly-refund-quiz';
 import duckCreekRefundsQuiz from './duck-creek-refunds-quiz';
 import hawaiiRefundReportQuiz from './hawaii-refund-report-quiz';
 import monthlyCollectionsNotesQuiz from './monthly-collections-notes-quiz';
+import nonMatchingPaymentsQuiz from './non-matching-payments-quiz';
 import nsfProcessingQuiz from './nsf-processing-quiz';
 import nkllRequestQuiz from './nkll-request-quiz';
 import returnedMailsQuiz from './returned-mails-quiz';
@@ -23,9 +25,11 @@ export const quizData = {
   'agent-statement-requests': agentStatementRequestsQuiz,
   'collections-rlink-wins-notes': collectionsRlinkWinsQuiz,
   'direct-bill-collect-letter': directBillCollectLetterQuiz,
+  'direct-bill-weekly-refund': directBillWeeklyRefundQuiz,
   'duck-creek-refunds': duckCreekRefundsQuiz,
   'hawaii-refund-report': hawaiiRefundReportQuiz,
   'monthly-collections-notes': monthlyCollectionsNotesQuiz,
+  'non-matching-payments': nonMatchingPaymentsQuiz,
   'nsf-processing': nsfProcessingQuiz,
   'nkll-request': nkllRequestQuiz,
   'returned-mails': returnedMailsQuiz,
