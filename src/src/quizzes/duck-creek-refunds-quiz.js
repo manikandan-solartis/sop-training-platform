@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the processing schedule for Duck Creek Refunds?', options: ['Weekly', 'Daily', 'Monthly', 'Bi-weekly'], correct: 1 },
+  { q: 'What is the SLA for refund processing?', options: ['Same day', '1-2 business days', '3-5 business days', '1 week'], correct: 1 },
+  { q: 'What is the daily volume forecast?', options: ['5 to 15', '20 to 40', '50 to 75', '100 to 150'], correct: 1 },
+  { q: 'Where should refunds be processed?', options: ['WINS only', 'Duck Creek', 'Excel', 'Email'], correct: 1 },
+  { q: 'What must be checked before processing refund?', options: ['Policy status only', 'Outstanding balances only', 'Policy status and outstanding balances', 'Nothing'], correct: 2 },
+  { q: 'If payment is older than 6 months, what method?', options: ['ACH only', 'Refund to Check', 'Wire transfer', 'Either ACH or Check'], correct: 1 },
+  { q: 'What refund amount requires manager approval?', options: ['Over $1,000', 'Over $2,500', 'Over $5,000', 'Over $10,000'], correct: 2 },
+  { q: 'What is the preferred refund method?', options: ['Check', 'ACH', 'Wire transfer', 'Cash'], correct: 1 },
+  { q: 'How long does ACH processing take?', options: ['1-2 business days', '3-5 business days', '7-10 business days', '2 weeks'], correct: 1 },
+  { q: 'How long does Check processing take?', options: ['3-5 business days', '5-7 business days', '7-10 business days', '2 weeks'], correct: 2 },
+  { q: 'Can you process refund with outstanding balance?', options: ['Yes, always', 'No, never', 'Only if approved', 'Only for small amounts'], correct: 1 },
+  { q: 'Where should you add processing notes?', options: ['Email only', 'Duck Creek', 'Excel only', 'WINS only'], correct: 1 },
+  { q: 'What to verify before processing ACH?', options: ['Nothing', 'Bank account information', 'Email address', 'Phone number'], correct: 1 },
+  { q: 'What to verify before processing Check?', options: ['Nothing', 'Email address', 'Mailing address', 'Phone number'], correct: 2 },
+  { q: 'What is NOT eligible for refund?', options: ['Policy cancelled', 'Overpayment', 'Outstanding balance on account', 'Duplicate payment'], correct: 2 },
+  { q: 'Where do you review payment history?', options: ['Policy screen', 'Account Ledger', 'Excel log', 'Email'], correct: 1 },
+  { q: 'What system is used for verification if needed?', options: ['Duck Creek only', 'WINS', 'Excel', 'Outlook'], correct: 1 },
+  { q: 'What should be updated after processing?', options: ['Duck Creek notes only', 'Excel log only', 'Duck Creek notes and Excel log', 'Nothing'], correct: 2 },
+  { q: 'Who is Level 1 escalation contact?', options: ['Kelly Barnard', 'Ashley Seidel', 'Jennifer Hasse', 'Colleen Krider'], correct: 1 },
+  { q: 'What happens if refund requires manager approval?', options: ['Process immediately', 'Hold for Review and email manager', 'Reject refund', 'Send to agent'], correct: 1 }
+];

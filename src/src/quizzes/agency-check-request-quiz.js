@@ -1,0 +1,22 @@
+export default [
+  { q: 'What keyboard shortcut opens Notes in WINS?', options: ['F1', 'Shift + F1', 'Ctrl + N', 'Alt + N'], correct: 1 },
+  { q: 'How many "Collections" notes should exist in WINS?', options: ['Multiple allowed', 'Only ONE', 'At least two', 'None'], correct: 1 },
+  { q: 'What should you type in Excel Column E for existing updates?', options: ['UPDATED', 'UPDATE', 'CNEW', 'COMPLETE'], correct: 1 },
+  { q: 'What key saves/updates in WINS?', options: ['F8', 'F6', 'F12', 'Enter'], correct: 1 },
+  { q: 'Where should RLink notes be placed?', options: ['Collections folder', 'Surety Operations', 'Agent folder', 'Archive'], correct: 1 },
+  { q: 'What should the remainder be set to in RLink?', options: ['Previous amount', 'Zero', 'Total due', 'Not specified'], correct: 1 },
+  { q: 'How many "Direct Collect" notes in RLink?', options: ['Multiple', 'Only ONE', 'Two minimum', 'None'], correct: 1 },
+  { q: 'What tab in Excel contains the work list?', options: ['Sheet1', 'Notes Needed', 'Collections', 'Summary'], correct: 1 },
+  { q: 'What does "F12" do in WINS?', options: ['Save', 'Update', 'Go back', 'Delete'], correct: 2 },
+  { q: 'What format is used for collection amounts?', options: ['$985', '985.00', '[Year]: $[Amount]', 'Year-985'], correct: 2 },
+  { q: 'What should you type in Excel Column E for new placements?', options: ['NEW', 'CNEW', 'CREATE', 'UPDATED'], correct: 1 },
+  { q: 'What type should you press to view a note in WINS?', options: ['1', '5', '2', '3'], correct: 1 },
+  { q: 'What type should you press to revise a note in WINS?', options: ['1', '5', '2', '3'], correct: 2 },
+  { q: 'Where do you access My Bond Center?', options: ['WINS', 'RLI net homepage', 'Lawson', 'Enterprise Inquiry'], correct: 1 },
+  { q: 'What processing frequency is this SOP?', options: ['Daily', 'Weekly', 'Monthly', 'Quarterly'], correct: 2 },
+  { q: 'What should you do if duplicate RLink notes exist?', options: ['Delete all', 'Edit and mark "Do Not Use"', 'Keep both', 'Merge them'], correct: 1 },
+  { q: 'What must match between Excel and WINS?', options: ['Dates only', 'Terms amounts and Total due', 'Agent names', 'Bond numbers'], correct: 1 },
+  { q: 'What key posts write off in WINS?', options: ['F6', 'F8', 'F12', 'F1'], correct: 1 },
+  { q: 'What column shows "New Placement" in Excel?', options: ['Column A', 'Column D', 'Column E', 'Column F'], correct: 1 },
+  { q: 'What should you do if no Collections note exists for new placement?', options: ['Skip it', 'Email Surety Accounting team', 'Create in RLink only', 'Wait for update'], correct: 1 }
+];

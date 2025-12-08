@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the processing schedule for Special Markets Formatting?', options: ['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'], correct: 2 },
+  { q: 'What is the volume forecast per month?', options: ['10 to 15', '25 to 30', '40 to 45', '50 to 55'], correct: 1 },
+  { q: 'Where are CSV statements found?', options: ['P:\\Specialty Markets', 'S:\\cash ops\\SM_Statements\\YEARMO', 'C:\\Statements', 'Desktop'], correct: 1 },
+  { q: 'What keyboard shortcut adds filter to top row?', options: ['Ctrl+F', 'Ctrl+Shift+L', 'Alt+F', 'Shift+F'], correct: 1 },
+  { q: 'What formula is used in Cant column?', options: ['=A2&B2&C2', '=B2&D2&E2', '=CONCAT(B2,D2,E2)', '=B2+D2+E2'], correct: 1 },
+  { q: 'What should "Full Comm AMT" be changed to for Commission transactions?', options: ['-1', '0', 'Blank', 'N/A'], correct: 1 },
+  { q: 'What key opens "Go to Special" dialog?', options: ['F3', 'F4', 'F5', 'F6'], correct: 2 },
+  { q: 'What to select when showing subtotal lines only?', options: ['1', '2', '3', '4'], correct: 1 },
+  { q: 'Where should formatted files be saved?', options: ['Desktop', 'Same folder with "Formatted" in title', 'C:\\Temp', 'Email'], correct: 1 },
+  { q: 'What is the Big I folder location?', options: ['Desktop', 'P:\\Specialty Markets\\Electronic Statements\\DB\\YEAR\\MOYEAR', 'C:\\Reports', 'Shared Drive'], correct: 1 },
+  { q: 'Which agents need special AC files? (Select applicable)', options: ['09623 & 43621', '10692 & 90216', '29293 & 90050', 'All agents'], correct: 0 },
+  { q: 'What WINS command for work with queries?', options: ['NAFM', 'WRKQRY', 'PIC', 'QUERY'], correct: 1 },
+  { q: 'What is the query name for AC downloads?', options: ['IIAA.ACUP', 'IIAA.ACDWN', 'IIAA.ACGET', 'IIAA.ACLIST'], correct: 1 },
+  { q: 'For agent 09623, what needs to be edited?', options: ['Agent number', 'Full year to 2 digits', 'Premium amount', 'Date format'], correct: 1 },
+  { q: 'What format does agent 43621 need?', options: ['.CSV', '.XLSX', '.DAT', '.PDF'], correct: 2 },
+  { q: 'What WINS mnemonic for producer functions?', options: ['PROD', 'NAFM', 'FUNC', 'MENU'], correct: 1 },
+  { q: 'What option in NAFM copies statement to disk?', options: ['10', '30', '50', '70'], correct: 2 },
+  { q: 'What password for 90050 DB template?', options: ['PASSWORD', 'INFO4AFI', '90050PASS', 'ADMIN'], correct: 1 },
+  { q: 'What delimiter for Text to Columns in 90050?', options: ['Comma', 'Tab', 'Space', 'Semicolon'], correct: 2 },
+  { q: 'Who is Level 1 escalation contact?', options: ['Kelly Barnard', 'Brittney Birge', 'Danielle Moore', 'Ashley Seidel'], correct: 1 }
+];
