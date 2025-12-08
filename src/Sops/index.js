@@ -7,6 +7,8 @@ import duckCreekRefunds from './duck-creek-refunds';
 import hawaiiRefundReport from './hawaii-refund-report';
 import monthlyCollectionsNotes from './monthly-collections-notes';
 import nsfProcessing from './nsf-processing';
+import nkllRequest from './nkll-request';
+import returnedMails from './returned-mails';
 
 // To add a new SOP:
 // 1. Create new file: src/sops/your-sop-name.js
@@ -21,7 +23,9 @@ export const sopData = {
   'duck-creek-refunds': duckCreekRefunds,
   'hawaii-refund-report': hawaiiRefundReport,
   'monthly-collections-notes': monthlyCollectionsNotes,
-  'nsf-processing': nsfProcessing
+  'nsf-processing': nsfProcessing,
+  'nkll-request': nkllRequest,
+  'returned-mails': returnedMails
   // Add more SOPs here as: 'sop-id': sopVariableName,
 };
 
