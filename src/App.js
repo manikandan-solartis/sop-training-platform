@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle } from 'lucide-react';
+import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle, Clock, Users, BarChart3, Activity } from 'lucide-react';
 import { sopData } from './sopData';
 import { getSmartAnswer } from './aiTrainer';
 import { generateQuiz } from './quizGenerator';
@@ -36,11 +36,45 @@ const App = () => {
   const [newSOPData, setNewSOPData] = useState({ name: '', category: '', difficulty: '', content: '' });
   const [currentQuizQuestions, setCurrentQuizQuestions] = useState([]);
   const [sopDatabase, setSOPDatabase] = useState(sopData);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sopStartTime, setSOPStartTime] = useState(null);
+  const [userActivities, setUserActivities] = useState(() => {
+    const saved = localStorage.getItem('userActivities');
+    return saved ? JSON.parse(saved) : [];
+  });
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Save activities to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('userActivities', JSON.stringify(userActivities));
+  }, [userActivities]);
+
+  // Track time spent on current SOP
+  useEffect(() => {
+    let interval;
+    if (selectedSOP && sopStartTime) {
+      interval = setInterval(() => {
+        // Update every minute silently
+      }, 60000);
+    }
+    return () => clearInterval(interval);
+  }, [selectedSOP, sopStartTime]);
+
+  const logActivity = (activityType, details = {}) => {
+    const activity = {
+      id: Date.now(),
+      userEmail: currentUser.email,
+      userName: currentUser.name,
+      activityType,
+      timestamp: new Date().toISOString(),
+      ...details
+    };
+    setUserActivities(prev => [activity, ...prev]);
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -56,17 +90,33 @@ const App = () => {
     );
 
     if (user) {
+      const loginTime = new Date();
       setCurrentUser(user);
       setIsLoggedIn(true);
       setCurrentView('sop-list');
+      setSessionStartTime(loginTime);
       setLoginEmail('');
       setLoginPassword('');
+      
+      logActivity('login', {
+        loginTime: loginTime.toISOString()
+      });
     } else {
       setLoginError('Invalid email or password');
     }
   };
 
   const handleLogout = () => {
+    const logoutTime = new Date();
+    const sessionDuration = sessionStartTime 
+      ? Math.round((logoutTime - sessionStartTime) / 1000 / 60) // minutes
+      : 0;
+
+    logActivity('logout', {
+      logoutTime: logoutTime.toISOString(),
+      sessionDuration: `${sessionDuration} minutes`
+    });
+
     setIsLoggedIn(false);
     setCurrentUser(null);
     setSelectedSOP(null);
@@ -75,12 +125,26 @@ const App = () => {
     setLoginEmail('');
     setLoginPassword('');
     setLoginError('');
+    setSessionStartTime(null);
+    setSOPStartTime(null);
   };
 
   const handleSelectSOP = (sopId) => {
+    // Log time spent on previous SOP if any
+    if (selectedSOP && sopStartTime) {
+      const timeSpent = Math.round((new Date() - sopStartTime) / 1000 / 60);
+      logActivity('sop_time', {
+        sopId: selectedSOP,
+        sopName: sopDatabase[selectedSOP].name,
+        timeSpent: `${timeSpent} minutes`
+      });
+    }
+
     setSelectedSOP(sopId);
     setActiveMode('qa');
+    setSOPStartTime(new Date());
     const sop = sopDatabase[sopId];
+    
     setMessages([{ 
       id: 1, 
       type: 'assistant', 
@@ -89,6 +153,12 @@ const App = () => {
     setCurrentView('sop-detail');
     setQuizAnswers({});
     setCurrentQuizQuestions(generateQuiz(sopId));
+
+    logActivity('sop_access', {
+      sopId,
+      sopName: sop.name,
+      sopCategory: sop.category
+    });
   };
 
   const handleSendMessage = async () => {
@@ -105,6 +175,12 @@ const App = () => {
     
     setMessages(prev => [...prev, { id: prev.length + 1, type: 'assistant', text: response }]);
     setLoading(false);
+
+    logActivity('qa_interaction', {
+      sopId: selectedSOP,
+      sopName: sop.name,
+      question: userInput.substring(0, 100) // Log first 100 chars
+    });
   };
 
   const submitQuiz = () => {
@@ -114,12 +190,27 @@ const App = () => {
     });
     const pct = (correct / currentQuizQuestions.length) * 100;
     const msg = pct === 100 ? '🎉 Perfect!' : pct >= 80 ? '👍 Great!' : pct >= 60 ? '📚 Good!' : '📖 Keep practicing!';
+    
+    logActivity('quiz_completed', {
+      sopId: selectedSOP,
+      sopName: sopDatabase[selectedSOP].name,
+      score: `${correct}/${currentQuizQuestions.length}`,
+      percentage: `${pct.toFixed(0)}%`,
+      totalQuestions: currentQuizQuestions.length,
+      correctAnswers: correct
+    });
+
     alert(`Score: ${correct}/${currentQuizQuestions.length} (${pct.toFixed(0)}%)\n\n${msg}`);
   };
 
   const retakeQuiz = () => {
     setQuizAnswers({});
     setCurrentQuizQuestions(generateQuiz(selectedSOP));
+    
+    logActivity('quiz_retake', {
+      sopId: selectedSOP,
+      sopName: sopDatabase[selectedSOP].name
+    });
   };
 
   const handleUploadSOP = () => {
@@ -132,6 +223,14 @@ const App = () => {
       ...prev,
       [newId]: { ...newSOPData, id: newId, summary: 'Custom SOP', keywords: [] }
     }));
+    
+    logActivity('sop_uploaded', {
+      sopId: newId,
+      sopName: newSOPData.name,
+      sopCategory: newSOPData.category,
+      sopDifficulty: newSOPData.difficulty
+    });
+
     setNewSOPData({ name: '', category: '', difficulty: '', content: '' });
     setShowUploadModal(false);
     alert('SOP uploaded successfully!');
@@ -139,9 +238,16 @@ const App = () => {
 
   const handleDeleteSOP = (sopId) => {
     if (window.confirm(`Delete "${sopDatabase[sopId].name}"?`)) {
+      const deletedSOP = sopDatabase[sopId];
       const newDB = { ...sopDatabase };
       delete newDB[sopId];
       setSOPDatabase(newDB);
+      
+      logActivity('sop_deleted', {
+        sopId,
+        sopName: deletedSOP.name
+      });
+
       if (selectedSOP === sopId) {
         setSelectedSOP(null);
         setMessages([]);
@@ -149,6 +255,36 @@ const App = () => {
       }
       alert('SOP deleted successfully!');
     }
+  };
+
+  const formatDuration = (minutes) => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  const getUserStats = (email) => {
+    const userActivitiesFiltered = userActivities.filter(a => a.userEmail === email);
+    const quizzes = userActivitiesFiltered.filter(a => a.activityType === 'quiz_completed');
+    const sopAccesses = userActivitiesFiltered.filter(a => a.activityType === 'sop_access');
+    const timeActivities = userActivitiesFiltered.filter(a => a.activityType === 'sop_time');
+    
+    const totalTime = timeActivities.reduce((sum, a) => {
+      const mins = parseInt(a.timeSpent);
+      return sum + (isNaN(mins) ? 0 : mins);
+    }, 0);
+
+    const avgScore = quizzes.length > 0
+      ? quizzes.reduce((sum, q) => sum + parseInt(q.percentage), 0) / quizzes.length
+      : 0;
+
+    return {
+      totalQuizzes: quizzes.length,
+      totalSOPsAccessed: new Set(sopAccesses.map(a => a.sopId)).size,
+      totalTimeSpent: totalTime,
+      averageScore: avgScore.toFixed(0)
+    };
   };
 
   if (!isLoggedIn) {
@@ -226,12 +362,23 @@ const App = () => {
                 <p className="text-sm text-gray-600">Welcome, {currentUser.name}</p>
               </div>
             </div>
-            <button 
-              onClick={handleLogout}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center gap-3">
+              {currentUser.role === 'admin' && (
+                <button 
+                  onClick={() => setCurrentView('analytics')}
+                  className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                >
+                  <BarChart3 size={18} />
+                  Analytics
+                </button>
+              )}
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
 
@@ -334,161 +481,168 @@ const App = () => {
     );
   }
 
-  const sop = sopDatabase[selectedSOP];
-  
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {sidebarOpen && (
-        <div className="w-80 bg-white border-r flex flex-col">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-bold">{sop.name}</h2>
-            <p className="text-sm text-gray-600">{sop.category}</p>
-            <p className="text-xs text-gray-500 mt-2">Logged in as {currentUser.name}</p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6">
-            <button 
-              onClick={() => setActiveMode('qa')} 
-              className={`w-full p-3 rounded-lg mb-2 font-semibold transition-colors ${activeMode === 'qa' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-            >
-              💬 Q&A Mode
-            </button>
-            <button 
-              onClick={() => setActiveMode('quiz')} 
-              className={`w-full p-3 rounded-lg mb-2 font-semibold transition-colors ${activeMode === 'quiz' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-            >
-              ✅ Quiz Mode
-            </button>
-            <button 
-              onClick={() => setActiveMode('content')} 
-              className={`w-full p-3 rounded-lg font-semibold transition-colors ${activeMode === 'content' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-            >
-              📖 View Content
-            </button>
-          </div>
-          <div className="p-6 border-t space-y-2">
-            <button 
-              onClick={() => { setSelectedSOP(null); setCurrentView('sop-list'); }} 
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-colors"
-            >
-              ← Back to List
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Sign Out
-            </button>
+  if (currentView === 'analytics') {
+    const allUsers = VALID_CREDENTIALS.filter(u => u.role === 'user');
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="bg-white border-b shadow-sm">
+          <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="text-purple-600" size={32} />
+              <div>
+                <h1 className="text-2xl font-bold">User Analytics</h1>
+                <p className="text-sm text-gray-600">Training Activity Dashboard</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setCurrentView('sop-list')}
+                className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors"
+              >
+                ← Back to SOPs
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
-      )}
 
-      <div className="flex-1 flex flex-col">
-        <div className="bg-white border-b p-4 flex items-center gap-4">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-100 rounded-lg">
-            <Menu size={24} />
-          </button>
-          <h1 className="text-xl font-bold">
-            {activeMode === 'qa' ? 'Q&A Mode' : activeMode === 'quiz' ? 'Quiz Mode' : 'SOP Content'}
-          </h1>
-        </div>
+        <div className="max-w-7xl mx-auto p-8">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Users className="text-blue-600" size={24} />
+                <h3 className="font-semibold text-gray-700">Total Users</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{allUsers.length}</p>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Activity className="text-green-600" size={24} />
+                <h3 className="font-semibold text-gray-700">Active Users</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {new Set(userActivities.map(a => a.userEmail)).size}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <FileText className="text-purple-600" size={24} />
+                <h3 className="font-semibold text-gray-700">Total Quizzes</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {userActivities.filter(a => a.activityType === 'quiz_completed').length}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Clock className="text-orange-600" size={24} />
+                <h3 className="font-semibold text-gray-700">Total Time</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {formatDuration(userActivities
+                  .filter(a => a.activityType === 'sop_time')
+                  .reduce((sum, a) => sum + parseInt(a.timeSpent || 0), 0)
+                )}
+              </p>
+            </div>
+          </div>
 
-        {activeMode === 'qa' && (
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {messages.map(msg => (
-                <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xl p-4 rounded-lg ${msg.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                    <pre className="whitespace-pre-wrap font-sans text-sm">{msg.text}</pre>
+          {/* User Statistics Table */}
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-6">User Statistics</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">User</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">SOPs Accessed</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Quizzes Taken</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Avg Score</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Time Spent</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Last Active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allUsers.map(user => {
+                    const stats = getUserStats(user.email);
+                    const lastActivity = userActivities.find(a => a.userEmail === user.email);
+                    return (
+                      <tr key={user.email} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-semibold text-gray-900">{user.name}</p>
+                            <p className="text-xs text-gray-500">{user.email}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-gray-700">{stats.totalSOPsAccessed}</td>
+                        <td className="py-3 px-4 text-gray-700">{stats.totalQuizzes}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            stats.averageScore >= 80 ? 'bg-green-100 text-green-700' :
+                            stats.averageScore >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                            stats.averageScore > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {stats.averageScore > 0 ? `${stats.averageScore}%` : 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-gray-700">
+                          {stats.totalTimeSpent > 0 ? formatDuration(stats.totalTimeSpent) : 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-gray-500 text-sm">
+                          {lastActivity ? new Date(lastActivity.timestamp).toLocaleString() : 'Never'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Activity Log */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold mb-6">Recent Activity Log</h2>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {userActivities.slice(0, 50).map(activity => (
+                <div key={activity.id} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-shrink-0">
+                    {activity.activityType === 'login' && <Users className="text-green-600" size={20} />}
+                    {activity.activityType === 'logout' && <Users className="text-red-600" size={20} />}
+                    {activity.activityType === 'sop_access' && <FileText className="text-blue-600" size={20} />}
+                    {activity.activityType === 'quiz_completed' && <Activity className="text-purple-600" size={20} />}
+                    {activity.activityType === 'quiz_retake' && <Activity className="text-orange-600" size={20} />}
+                    {activity.activityType === 'sop_time' && <Clock className="text-gray-600" size={20} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{activity.userName}</p>
+                    <p className="text-xs text-gray-600">
+                      {activity.activityType === 'login' && 'Logged in'}
+                      {activity.activityType === 'logout' && `Logged out (Session: ${activity.sessionDuration})`}
+                      {activity.activityType === 'sop_access' && `Started training: ${activity.sopName}`}
+                      {activity.activityType === 'quiz_completed' && `Completed quiz: ${activity.sopName} - Score: ${activity.score} (${activity.percentage})`}
+                      {activity.activityType === 'quiz_retake' && `Retaking quiz: ${activity.sopName}`}
+                      {activity.activityType === 'sop_time' && `Spent ${activity.timeSpent} on ${activity.sopName}`}
+                      {activity.activityType === 'qa_interaction' && `Asked question in ${activity.sopName}`}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-200 p-4 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="animate-pulse">Analyzing SOP...</div>
-                    </div>
-                  </div>
-                </div>
+              {userActivities.length === 0 && (
+                <p className="text-center text-gray-500 py-8">No activity recorded yet</p>
               )}
-              <div ref={messagesEndRef} />
-            </div>
-            <div className="border-t p-4 bg-white">
-              <div className="flex gap-2">
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask about the SOP..."
-                  className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-                <button 
-                  onClick={handleSendMessage} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-                >
-                  <Send size={20} />
-                </button>
-              </div>
             </div>
           </div>
-        )}
-
-        {activeMode === 'quiz' && (
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-                <h2 className="text-2xl font-bold mb-4">Quiz: {sop.name}</h2>
-                <p className="text-gray-600 mb-4">{currentQuizQuestions.length} questions • Select your answers</p>
-              </div>
-              {currentQuizQuestions.map((q, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 mb-4 shadow-sm">
-                  <p className="font-bold mb-4">Q{i+1}. {q.q}</p>
-                  {q.options.map((opt, j) => (
-                    <div 
-                      key={j} 
-                      className={`p-3 mb-2 border rounded-lg cursor-pointer transition-colors ${
-                        quizAnswers[i] === j 
-                          ? 'bg-blue-100 border-blue-500' 
-                          : 'hover:bg-gray-50 border-gray-200'
-                      }`} 
-                      onClick={() => setQuizAnswers(prev => ({ ...prev, [i]: j }))}
-                    >
-                      {opt}
-                    </div>
-                  ))}
-                </div>
-              ))}
-              <div className="flex gap-4">
-                <button 
-                  onClick={submitQuiz} 
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Submit Quiz
-                </button>
-                <button 
-                  onClick={retakeQuiz} 
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-colors"
-                >
-                  New Questions
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeMode === 'content' && (
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto bg-white rounded-xl p-8 shadow-sm">
-              <h2 className="text-3xl font-bold mb-6">{sop.name}</h2>
-              <div className="prose max-w-none">
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{sop.content}</pre>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-    </div>
-  );
-};
-
-export default App;
+    );
+  }
