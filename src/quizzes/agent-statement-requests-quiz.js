@@ -1,0 +1,22 @@
+export default [
+  { q: 'What is the primary system for generating agent statements?', options: ['Duck Creek', 'Enterprise Inquiry', 'WINS', 'Lawson'], correct: 1 },
+    { q: 'What is the SLA for agent statement requests?', options: ['Same day', '1-2 business days', '3-5 business days', '1 week'], correct: 1 },
+    { q: 'Which email should always be CCd?', options: ['help@rlicorp.com', 'surety.accounting@rlicorp.com', 'support@rlicorp.com', 'admin@rlicorp.com'], correct: 1 },
+    { q: 'What is the naming convention for saved statements?', options: ['AgentCode_Period_Date.pdf', 'Statement_Date.pdf', 'Agent_Statement.pdf', 'Commission_Report.pdf'], correct: 0 },
+    { q: 'When should Duck Creek be used?', options: ['Always first', 'As secondary verification', 'Never', 'Only for new agents'], correct: 1 },
+    { q: 'What field should you look for in Duck Creek?', options: ['Agent Reference', 'Producer Account Reference', 'Commission Code', 'Statement ID'], correct: 1 },
+    { q: 'What should you do if agent code is not found?', options: ['Ignore request', 'Verify with agent and check alternate systems', 'Send blank statement', 'Forward to manager'], correct: 1 },
+    { q: 'What format should statements be exported as?', options: ['Word', 'Excel', 'PDF', 'Text'], correct: 2 },
+    { q: 'What types of periods can be requested?', options: ['Only monthly', 'Only annual', 'Monthly, quarterly, or annual', 'Only quarterly'], correct: 2 },
+    { q: 'What should you do after generating the statement?', options: ['Send immediately', 'Review for accuracy first', 'Forward to IT', 'Archive only'], correct: 1 },
+    { q: 'Where should Enterprise Inquiry data be cross-referenced?', options: ['WINS', 'Duck Creek', 'Lawson', 'RLink'], correct: 1 },
+    { q: 'What is the first step when receiving a request?', options: ['Generate statement', 'Note agent code and period', 'Forward email', 'Login to system'], correct: 1 },
+    { q: 'Which application is used to view PDFs?', options: ['Microsoft Word', 'Adobe PDF Reader', 'Notepad', 'Excel'], correct: 1 },
+    { q: 'What tone should be maintained?', options: ['Casual', 'Professional', 'Formal only', 'Brief only'], correct: 1 },
+    { q: 'What is step 10 in the process?', options: ['Export PDF', 'Access Duck Creek Policy Extended Data', 'Send email', 'Review statement'], correct: 1 },
+    { q: 'Where is the commission statements section?', options: ['WINS', 'Enterprise Inquiry', 'Duck Creek', 'Lawson'], correct: 1 },
+    { q: 'What should you search for in step 4?', options: ['Bond number', 'Agent code', 'Period', 'Statement ID'], correct: 1 },
+    { q: 'Which step involves reviewing for accuracy?', options: ['Step 5', 'Step 7', 'Step 8', 'Step 10'], correct: 2 },
+    { q: 'What should be attached to reply email?', options: ['Agent code', 'Statement PDF', 'Request copy', 'Period details'], correct: 1 },
+    { q: 'Which system is checked if Enterprise Inquiry has no info?', options: ['WINS', 'Duck Creek', 'Lawson', 'RLink'], correct: 1 }
+  ];
