@@ -638,11 +638,190 @@ const App = () => {
                 </div>
               ))}
               {userActivities.length === 0 && (
-                <p className="text-center text-gray-500 py-8">No activity recorded yet</p>
-              )}
+                <p className="text-3xl font-bold text-gray-900">
+                {userActivities.filter(a => a.activityType === 'quiz_completed').length}
+              </p>
             </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Clock className="text-orange-600" size={24} />
+                <h3 className="font-semibold text-gray-700">Total Time Spent</h3>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {
+                  formatDuration(
+                    userActivities
+                      .filter(a => a.activityType === 'sop_time')
+                      .reduce((sum, a) => {
+                        const mins = parseInt(a.timeSpent);
+                        return sum + (isNaN(mins) ? 0 : mins);
+                      }, 0)
+                  )
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* User Table */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-2xl font-bold mb-6">User Performance Overview</h2>
+
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100 text-left text-sm font-semibold">
+                  <th className="p-3 border-b">User Name</th>
+                  <th className="p-3 border-b">Email</th>
+                  <th className="p-3 border-b">SOPs Accessed</th>
+                  <th className="p-3 border-b">Total Quizzes</th>
+                  <th className="p-3 border-b">Avg Score</th>
+                  <th className="p-3 border-b">Time Spent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allUsers.map((u, idx) => {
+                  const stats = getUserStats(u.email);
+                  return (
+                    <tr key={idx} className="border-b hover:bg-gray-50">
+                      <td className="p-3">{u.name}</td>
+                      <td className="p-3">{u.email}</td>
+                      <td className="p-3">{stats.totalSOPsAccessed}</td>
+                      <td className="p-3">{stats.totalQuizzes}</td>
+                      <td className="p-3">{stats.averageScore}%</td>
+                      <td className="p-3">{formatDuration(stats.totalTimeSpent)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     );
   }
+
+  // -----------------------------------
+  // SOP DETAIL VIEW
+  // -----------------------------------
+  if (currentView === 'sop-detail') {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        
+        {/* Sidebar */}
+        <div className={`${sidebarOpen ? "w-80" : "w-20"} bg-white shadow-xl transition-all`}>
+          <div className="p-4 border-b flex justify-between items-center">
+            <h2 className={`font-bold text-xl ${!sidebarOpen && "hidden"}`}>Navigation</h2>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+
+          <div className="p-4 space-y-3">
+            <button 
+              onClick={() => setActiveMode('qa')}
+              className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors ${
+                activeMode === 'qa' ? 'bg-blue-600 text-white' : 'bg-gray-100'
+              }`}
+            >
+              Q&A Trainer
+            </button>
+
+            <button 
+              onClick={() => setActiveMode('quiz')}
+              className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors ${
+                activeMode === 'quiz' ? 'bg-purple-600 text-white' : 'bg-gray-100'
+              }`}
+            >
+              Quiz Mode
+            </button>
+
+            <button 
+              onClick={() => {
+                setSelectedSOP(null);
+                setCurrentView('sop-list');
+              }}
+              className="w-full text-left px-4 py-3 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold"
+            >
+              ← Back to SOPs
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-8">
+          {activeMode === 'qa' && (
+            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+              <h2 className="text-2xl font-bold mb-6">{sopDatabase[selectedSOP].name}</h2>
+
+              <div className="h-[60vh] overflow-y-auto p-4 border rounded-lg mb-4 bg-gray-50">
+                {messages.map(m => (
+                  <div key={m.id} className={`mb-4 ${m.type === 'user' ? 'text-right' : 'text-left'}`}>
+                    <p className={`inline-block px-4 py-2 rounded-xl ${
+                      m.type === 'user' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-200 text-gray-800'
+                    }`}>
+                      {m.text}
+                    </p>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="flex gap-3">
+                <input
+                  className="flex-1 p-3 border rounded-lg"
+                  placeholder="Ask a question about this SOP..."
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  className="bg-blue-600 px-4 py-3 rounded-lg text-white font-semibold"
+                >
+                  <Send size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeMode === 'quiz' && (
+            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+              <h2 className="text-2xl font-bold mb-6">Quiz: {sopDatabase[selectedSOP].name}</h2>
+              {currentQuizQuestions.map((q, idx) => (
+                <div key={idx} className="mb-6">
+                  <p className="font-semibold mb-3">{idx + 1}. {q.question}</p>
+                  {q.options.map((opt, i) => (
+                    <label key={i} className="flex items-center gap-2 mb-1">
+                      <input 
+                        type="radio"
+                        name={`q${idx}`}
+                        checked={quizAnswers[idx] === i}
+                        onChange={() => setQuizAnswers(prev => ({ ...prev, [idx]: i }))}
+                      />
+                      <span>{opt}</span>
+                    </label>
+                  ))}
+                </div>
+              ))}
+
+              <button 
+                onClick={submitQuiz}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold mr-3"
+              >
+                Submit Quiz
+              </button>
+              <button 
+                onClick={retakeQuiz}
+                className="bg-gray-200 px-6 py-3 rounded-lg font-semibold"
+              >
+                Retake
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+};
+
+export default App;
