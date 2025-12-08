@@ -5,6 +5,8 @@ import collectionsRlinkWins from './collections-rlink-wins-notes';
 import directBillCollectLetter from './direct-bill-collect-letter';
 import duckCreekRefunds from './duck-creek-refunds';
 import hawaiiRefundReport from './hawaii-refund-report';
+import monthlyCollectionsNotes from './monthly-collections-notes';
+import nsfProcessing from './nsf-processing';
 
 // To add a new SOP:
 // 1. Create new file: src/sops/your-sop-name.js
@@ -17,7 +19,9 @@ export const sopData = {
   'collections-rlink-wins-notes': collectionsRlinkWins,
   'direct-bill-collect-letter': directBillCollectLetter,
   'duck-creek-refunds': duckCreekRefunds,
-  'hawaii-refund-report': hawaiiRefundReport
+  'hawaii-refund-report': hawaiiRefundReport,
+  'monthly-collections-notes': monthlyCollectionsNotes,
+  'nsf-processing': nsfProcessing
   // Add more SOPs here as: 'sop-id': sopVariableName,
 };
 
