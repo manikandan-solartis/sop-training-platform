@@ -1,32 +1,38 @@
-// Master SOP Index - Import all individual SOPs here
-import agencyCheckRequest from './agency-check-request';
-import agentStatementRequests from './agent-statement-requests';
-import collectionsRlinkWins from './collections-rlink-wins-notes';
-import directBillCollectLetter from './direct-bill-collect-letter';
-import duckCreekRefunds from './duck-creek-refunds';
-import hawaiiRefundReport from './hawaii-refund-report';
-import monthlyCollectionsNotes from './monthly-collections-notes';
-import nsfProcessing from './nsf-processing';
-import nkllRequest from './nkll-request';
-import returnedMails from './returned-mails';
+// Master Quiz Index - Import all individual quiz modules
+import agencyCheckRequestQuiz from './agency-check-request-quiz';
+import agentStatementRequestsQuiz from './agent-statement-requests-quiz';
+import collectionsRlinkWinsQuiz from './collections-rlink-wins-notes-quiz';
+import directBillCollectLetterQuiz from './direct-bill-collect-letter-quiz';
+import duckCreekRefundsQuiz from './duck-creek-refunds-quiz';
+import hawaiiRefundReportQuiz from './hawaii-refund-report-quiz';
+import monthlyCollectionsNotesQuiz from './monthly-collections-notes-quiz';
+import nsfProcessingQuiz from './nsf-processing-quiz';
+import nkllRequestQuiz from './nkll-request-quiz';
+import returnedMailsQuiz from './returned-mails-quiz';
+import specialMarketsFormattingQuiz from './special-markets-formatting-quiz';
+import specialtyNettingQuiz from './specialty-netting-quiz';
+import specialtyReturnedItemQuiz from './specialty-returned-item-quiz';
 
-// To add a new SOP:
-// 1. Create new file: src/sops/your-sop-name.js
-// 2. Import it here: import yourSopName from './your-sop-name';
-// 3. Add to sopData object below with appropriate key
+// To add a new quiz:
+// 1. Create new file: src/quizzes/your-sop-name-quiz.js
+// 2. Import it here: import yourQuizName from './your-sop-name-quiz';
+// 3. Add to quizData object below with same key as SOP
 
-export const sopData = {
-  'agency-check-request': agencyCheckRequest,
-  'agent-statement-requests': agentStatementRequests,
-  'collections-rlink-wins-notes': collectionsRlinkWins,
-  'direct-bill-collect-letter': directBillCollectLetter,
-  'duck-creek-refunds': duckCreekRefunds,
-  'hawaii-refund-report': hawaiiRefundReport,
-  'monthly-collections-notes': monthlyCollectionsNotes,
-  'nsf-processing': nsfProcessing,
-  'nkll-request': nkllRequest,
-  'returned-mails': returnedMails
-  // Add more SOPs here as: 'sop-id': sopVariableName,
+export const quizData = {
+  'agency-check-request': agencyCheckRequestQuiz,
+  'agent-statement-requests': agentStatementRequestsQuiz,
+  'collections-rlink-wins-notes': collectionsRlinkWinsQuiz,
+  'direct-bill-collect-letter': directBillCollectLetterQuiz,
+  'duck-creek-refunds': duckCreekRefundsQuiz,
+  'hawaii-refund-report': hawaiiRefundReportQuiz,
+  'monthly-collections-notes': monthlyCollectionsNotesQuiz,
+  'nsf-processing': nsfProcessingQuiz,
+  'nkll-request': nkllRequestQuiz,
+  'returned-mails': returnedMailsQuiz,
+  'special-markets-formatting': specialMarketsFormattingQuiz,
+  'specialty-netting': specialtyNettingQuiz,
+  'specialty-returned-item': specialtyReturnedItemQuiz
+  // Add more quizzes here as: 'sop-id': quizVariableName,
 };
 
-export default sopData;
+export default quizData;
