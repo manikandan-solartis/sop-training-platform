@@ -1,10 +1,23 @@
+// src/App.js
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle, Clock, Users, BarChart3, Activity } from 'lucide-react';
+import {
+  Send,
+  FileText,
+  Menu,
+  X,
+  Upload,
+  Trash2,
+  AlertCircle,
+  Clock,
+  Users,
+  BarChart3,
+  Activity
+} from 'lucide-react';
 import { sopData } from './sopData';
 import { getSmartAnswer } from './aiTrainer';
 import { generateQuiz } from './quizGenerator';
 
-// Valid credentials - In production, this should be in a backend
+// NOTE: In production, move credentials + auth to backend
 const VALID_CREDENTIALS = [
   { email: 'admin@solartis.com', password: 'admin123', name: 'Admin User', role: 'admin' },
   { email: 'user1@solartis.com', password: 'user123', name: 'User 1', role: 'user' },
@@ -18,6 +31,14 @@ const VALID_CREDENTIALS = [
   { email: 'user9@solartis.com', password: 'user123', name: 'User 9', role: 'user' }
 ];
 
+const safeParseJSON = (s, fallback) => {
+  try {
+    return JSON.parse(s);
+  } catch (e) {
+    return fallback;
+  }
+};
+
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -25,59 +46,69 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentView, setCurrentView] = useState('login');
+  const [currentView, setCurrentView] = useState('login'); // 'login' | 'sop-list' | 'analytics' | 'sop-detail'
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeMode, setActiveMode] = useState('qa');
+  const [activeMode, setActiveMode] = useState('qa'); // 'qa' or 'quiz'
   const [quizAnswers, setQuizAnswers] = useState({});
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [newSOPData, setNewSOPData] = useState({ name: '', category: '', difficulty: '', content: '' });
   const [currentQuizQuestions, setCurrentQuizQuestions] = useState([]);
-  const [sopDatabase, setSOPDatabase] = useState(sopData);
+  const [sopDatabase, setSOPDatabase] = useState(sopData || {});
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [sopStartTime, setSOPStartTime] = useState(null);
   const [userActivities, setUserActivities] = useState(() => {
-    const saved = localStorage.getItem('userActivities');
-    return saved ? JSON.parse(saved) : [];
+    if (typeof window === 'undefined') return [];
+    return safeParseJSON(window.localStorage.getItem('userActivities'), []);
   });
+
   const messagesEndRef = useRef(null);
 
+  // Scroll chat to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Save activities to localStorage whenever they change
+  // persist user activities
   useEffect(() => {
-    localStorage.setItem('userActivities', JSON.stringify(userActivities));
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('userActivities', JSON.stringify(userActivities));
+      } catch (e) {
+        // ignore storage write errors in strict environments
+      }
+    }
   }, [userActivities]);
 
-  // Track time spent on current SOP
+  // track SOP minute updates (no UI change - placeholder for future)
   useEffect(() => {
     let interval;
     if (selectedSOP && sopStartTime) {
       interval = setInterval(() => {
-        // Update every minute silently
+        // placeholder: could update a visible timer every minute
       }, 60000);
     }
     return () => clearInterval(interval);
   }, [selectedSOP, sopStartTime]);
 
   const logActivity = (activityType, details = {}) => {
-    const activity = {
-      id: Date.now(),
-      userEmail: currentUser.email,
-      userName: currentUser.name,
+    // guard: require currentUser for meaningful logs
+    const base = {
+      id: Date.now() + Math.random().toString(36).slice(2, 9),
+      userEmail: currentUser?.email || 'unknown',
+      userName: currentUser?.name || 'Unknown',
       activityType,
       timestamp: new Date().toISOString(),
       ...details
     };
-    setUserActivities(prev => [activity, ...prev]);
+    setUserActivities(prev => [base, ...prev]);
   };
 
+  // ---------- Auth handlers ----------
   const handleLogin = (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     setLoginError('');
 
     if (!loginEmail || !loginPassword) {
@@ -97,7 +128,7 @@ const App = () => {
       setSessionStartTime(loginTime);
       setLoginEmail('');
       setLoginPassword('');
-      
+
       logActivity('login', {
         loginTime: loginTime.toISOString()
       });
@@ -108,8 +139,8 @@ const App = () => {
 
   const handleLogout = () => {
     const logoutTime = new Date();
-    const sessionDuration = sessionStartTime 
-      ? Math.round((logoutTime - sessionStartTime) / 1000 / 60) // minutes
+    const sessionDuration = sessionStartTime
+      ? Math.round((logoutTime - sessionStartTime) / 1000 / 60)
       : 0;
 
     logActivity('logout', {
@@ -129,13 +160,14 @@ const App = () => {
     setSOPStartTime(null);
   };
 
+  // ---------- SOP navigation ----------
   const handleSelectSOP = (sopId) => {
-    // Log time spent on previous SOP if any
+    // log time spent on previous SOP
     if (selectedSOP && sopStartTime) {
       const timeSpent = Math.round((new Date() - sopStartTime) / 1000 / 60);
       logActivity('sop_time', {
         sopId: selectedSOP,
-        sopName: sopDatabase[selectedSOP].name,
+        sopName: sopDatabase[selectedSOP]?.name || selectedSOP,
         timeSpent: `${timeSpent} minutes`
       });
     }
@@ -143,110 +175,113 @@ const App = () => {
     setSelectedSOP(sopId);
     setActiveMode('qa');
     setSOPStartTime(new Date());
+
     const sop = sopDatabase[sopId];
-    
-    setMessages([{ 
-      id: 1, 
-      type: 'assistant', 
-      text: `Welcome to "${sop.name}"!\n\n${sop.summary}\n\nI can help you with:\n• Understanding specific steps\n• Applications and systems used\n• Email addresses and escalation contacts\n• Differences between processes\n• SLA and timing requirements\n\nWhat would you like to know?`
+    setMessages([{
+      id: 'welcome',
+      type: 'assistant',
+      text: `Welcome to "${sop?.name || 'SOP'}"\n\n${sop?.summary || ''}\n\nI can help you with:\n• Understanding steps\n• Systems used\n• Escalation contacts\n• Differences between processes\n• SLA and timing requirements\n\nWhat would you like to know?`
     }]);
     setCurrentView('sop-detail');
     setQuizAnswers({});
-    setCurrentQuizQuestions(generateQuiz(sopId));
+    setCurrentQuizQuestions(generateQuiz(sopId) || []);
 
     logActivity('sop_access', {
       sopId,
-      sopName: sop.name,
-      sopCategory: sop.category
+      sopName: sop?.name,
+      sopCategory: sop?.category
     });
   };
 
+  // ---------- Chat / AI ----------
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, { id: prev.length + 1, type: 'user', text: input }]);
+    if (!input.trim() || !selectedSOP) return;
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', text: input }]);
     const userInput = input;
     setInput('');
     setLoading(true);
-    
-    await new Promise(r => setTimeout(r, 800));
-    
+
+    // simple debounce/latency mimic
+    await new Promise(r => setTimeout(r, 700));
+
     const sop = sopDatabase[selectedSOP];
-    const response = getSmartAnswer(userInput, sop.content, sop.keywords);
-    
-    setMessages(prev => [...prev, { id: prev.length + 1, type: 'assistant', text: response }]);
+    // getSmartAnswer is your local "AI" - keep synchronous or async depending on implementation
+    const response = getSmartAnswer(userInput, sop?.content || '', sop?.keywords || []);
+
+    setMessages(prev => [...prev, { id: Date.now() + 1, type: 'assistant', text: response }]);
     setLoading(false);
 
     logActivity('qa_interaction', {
       sopId: selectedSOP,
-      sopName: sop.name,
-      question: userInput.substring(0, 100) // Log first 100 chars
+      sopName: sop?.name,
+      question: userInput.substring(0, 200)
     });
   };
 
+  // ---------- Quiz ----------
   const submitQuiz = () => {
+    if (currentQuizQuestions.length === 0) {
+      alert('No questions available for this SOP.');
+      return;
+    }
     let correct = 0;
     currentQuizQuestions.forEach((q, idx) => {
       if (quizAnswers[idx] === q.correct) correct++;
     });
-    const pct = (correct / currentQuizQuestions.length) * 100;
+    const pct = Math.round((correct / currentQuizQuestions.length) * 100);
     const msg = pct === 100 ? '🎉 Perfect!' : pct >= 80 ? '👍 Great!' : pct >= 60 ? '📚 Good!' : '📖 Keep practicing!';
-    
+
     logActivity('quiz_completed', {
       sopId: selectedSOP,
-      sopName: sopDatabase[selectedSOP].name,
+      sopName: sopDatabase[selectedSOP]?.name,
       score: `${correct}/${currentQuizQuestions.length}`,
-      percentage: `${pct.toFixed(0)}%`,
+      percentage: `${pct}%`,
       totalQuestions: currentQuizQuestions.length,
       correctAnswers: correct
     });
 
-    alert(`Score: ${correct}/${currentQuizQuestions.length} (${pct.toFixed(0)}%)\n\n${msg}`);
+    alert(`Score: ${correct}/${currentQuizQuestions.length} (${pct}%)\n\n${msg}`);
   };
 
   const retakeQuiz = () => {
     setQuizAnswers({});
-    setCurrentQuizQuestions(generateQuiz(selectedSOP));
-    
+    setCurrentQuizQuestions(generateQuiz(selectedSOP) || []);
     logActivity('quiz_retake', {
       sopId: selectedSOP,
-      sopName: sopDatabase[selectedSOP].name
+      sopName: sopDatabase[selectedSOP]?.name
     });
   };
 
+  // ---------- Upload / Delete ----------
   const handleUploadSOP = () => {
     if (!newSOPData.name || !newSOPData.content) {
       alert('Please fill SOP name and content!');
       return;
     }
-    const newId = newSOPData.name.toLowerCase().replace(/\s+/g, '-');
+    const newId = newSOPData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
     setSOPDatabase(prev => ({
       ...prev,
-      [newId]: { ...newSOPData, id: newId, summary: 'Custom SOP', keywords: [] }
+      [newId]: { ...newSOPData, id: newId, summary: newSOPData.summary || 'Custom SOP', keywords: [] }
     }));
-    
     logActivity('sop_uploaded', {
       sopId: newId,
       sopName: newSOPData.name,
       sopCategory: newSOPData.category,
       sopDifficulty: newSOPData.difficulty
     });
-
     setNewSOPData({ name: '', category: '', difficulty: '', content: '' });
     setShowUploadModal(false);
     alert('SOP uploaded successfully!');
   };
 
   const handleDeleteSOP = (sopId) => {
+    if (!sopId || !sopDatabase[sopId]) return;
     if (window.confirm(`Delete "${sopDatabase[sopId].name}"?`)) {
       const deletedSOP = sopDatabase[sopId];
       const newDB = { ...sopDatabase };
       delete newDB[sopId];
       setSOPDatabase(newDB);
-      
-      logActivity('sop_deleted', {
-        sopId,
-        sopName: deletedSOP.name
-      });
+      logActivity('sop_deleted', { sopId, sopName: deletedSOP.name });
 
       if (selectedSOP === sopId) {
         setSelectedSOP(null);
@@ -257,7 +292,9 @@ const App = () => {
     }
   };
 
+  // ---------- Helpers ----------
   const formatDuration = (minutes) => {
+    if (!minutes || isNaN(minutes)) return '0m';
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -269,24 +306,28 @@ const App = () => {
     const quizzes = userActivitiesFiltered.filter(a => a.activityType === 'quiz_completed');
     const sopAccesses = userActivitiesFiltered.filter(a => a.activityType === 'sop_access');
     const timeActivities = userActivitiesFiltered.filter(a => a.activityType === 'sop_time');
-    
+
     const totalTime = timeActivities.reduce((sum, a) => {
-      const mins = parseInt(a.timeSpent);
-      return sum + (isNaN(mins) ? 0 : mins);
+      const mins = parseInt((a.timeSpent || '').replace(/\D/g, '')) || 0;
+      return sum + mins;
     }, 0);
 
     const avgScore = quizzes.length > 0
-      ? quizzes.reduce((sum, q) => sum + parseInt(q.percentage), 0) / quizzes.length
+      ? Math.round(quizzes.reduce((sum, q) => {
+        const p = parseInt((q.percentage || '').toString().replace(/\D/g, '')) || 0;
+        return sum + p;
+      }, 0) / quizzes.length)
       : 0;
 
     return {
       totalQuizzes: quizzes.length,
       totalSOPsAccessed: new Set(sopAccesses.map(a => a.sopId)).size,
       totalTimeSpent: totalTime,
-      averageScore: avgScore.toFixed(0)
+      averageScore: avgScore
     };
   };
 
+  // ---------- Renders ----------
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
@@ -294,7 +335,7 @@ const App = () => {
           <FileText className="mx-auto text-blue-600 mb-4" size={48} />
           <h1 className="text-3xl font-bold text-center mb-2">RLI SOP Training</h1>
           <p className="text-center text-gray-600 mb-6">Enterprise Training Platform</p>
-          
+
           <form onSubmit={handleLogin}>
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-2 text-gray-700">Email Address</label>
@@ -333,7 +374,7 @@ const App = () => {
               </div>
             )}
 
-            <button 
+            <button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
             >
@@ -350,6 +391,7 @@ const App = () => {
     );
   }
 
+  // ---------- SOP LIST ----------
   if (currentView === 'sop-list') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -359,12 +401,12 @@ const App = () => {
               <FileText className="text-blue-600" size={32} />
               <div>
                 <h1 className="text-2xl font-bold">SOP Training Platform</h1>
-                <p className="text-sm text-gray-600">Welcome, {currentUser.name}</p>
+                <p className="text-sm text-gray-600">Welcome, {currentUser?.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {currentUser.role === 'admin' && (
-                <button 
+              {currentUser?.role === 'admin' && (
+                <button
                   onClick={() => setCurrentView('analytics')}
                   className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
                 >
@@ -372,7 +414,7 @@ const App = () => {
                   Analytics
                 </button>
               )}
-              <button 
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
               >
@@ -388,9 +430,9 @@ const App = () => {
               <h2 className="text-4xl font-bold">SOP Library</h2>
               <p className="text-gray-600 mt-2">{Object.keys(sopDatabase).length} SOPs Available</p>
             </div>
-            {currentUser.role === 'admin' && (
-              <button 
-                onClick={() => setShowUploadModal(true)} 
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => setShowUploadModal(true)}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
               >
                 <Upload size={20} /> Upload SOP
@@ -399,12 +441,13 @@ const App = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.values(sopDatabase).map(sop => (
-              <div key={sop.id} className="bg-white rounded-xl shadow-lg p-6 relative group hover:shadow-xl transition-shadow">
-                {currentUser.role === 'admin' && (
-                  <button 
-                    onClick={() => handleDeleteSOP(sop.id)} 
+            {Object.entries(sopDatabase).map(([id, sop]) => (
+              <div key={id} className="bg-white rounded-xl shadow-lg p-6 relative group hover:shadow-xl transition-shadow">
+                {currentUser?.role === 'admin' && (
+                  <button
+                    onClick={() => handleDeleteSOP(id)}
                     className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-opacity"
+                    title="Delete SOP"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -413,15 +456,15 @@ const App = () => {
                   <FileText className="text-blue-600" size={36} />
                   <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                     sop.difficulty === 'Advanced' ? 'bg-red-100 text-red-700' :
-                    sop.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-green-100 text-green-700'
-                  }`}>{sop.difficulty}</span>
+                      sop.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-green-100 text-green-700'
+                  }`}>{sop.difficulty || 'Beginner'}</span>
                 </div>
                 <h3 className="text-xl font-bold mb-2">{sop.name}</h3>
                 <p className="text-sm text-gray-600 mb-2">{sop.category}</p>
                 <p className="text-sm text-gray-500 mb-4 line-clamp-2">{sop.summary}</p>
-                <button 
-                  onClick={() => handleSelectSOP(sop.id)} 
+                <button
+                  onClick={() => handleSelectSOP(id)}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all"
                 >
                   Start Training
@@ -431,6 +474,7 @@ const App = () => {
           </div>
         </div>
 
+        {/* Upload modal */}
         {showUploadModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -440,21 +484,21 @@ const App = () => {
                   <X size={24} />
                 </button>
               </div>
-              <input 
-                placeholder="SOP Name" 
-                value={newSOPData.name} 
-                onChange={(e) => setNewSOPData(prev => ({ ...prev, name: e.target.value }))} 
-                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
+              <input
+                placeholder="SOP Name"
+                value={newSOPData.name}
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
               />
-              <input 
-                placeholder="Category" 
-                value={newSOPData.category} 
-                onChange={(e) => setNewSOPData(prev => ({ ...prev, category: e.target.value }))} 
-                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
+              <input
+                placeholder="Category"
+                value={newSOPData.category}
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
               />
-              <select 
-                value={newSOPData.difficulty} 
-                onChange={(e) => setNewSOPData(prev => ({ ...prev, difficulty: e.target.value }))} 
+              <select
+                value={newSOPData.difficulty}
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, difficulty: e.target.value }))}
                 className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Difficulty</option>
@@ -462,14 +506,14 @@ const App = () => {
                 <option value="Intermediate">Intermediate</option>
                 <option value="Advanced">Advanced</option>
               </select>
-              <textarea 
-                placeholder="SOP Content" 
-                value={newSOPData.content} 
-                onChange={(e) => setNewSOPData(prev => ({ ...prev, content: e.target.value }))} 
-                className="w-full p-3 border rounded-lg mb-4 h-64 focus:ring-2 focus:ring-blue-500" 
+              <textarea
+                placeholder="SOP Content"
+                value={newSOPData.content}
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, content: e.target.value }))}
+                className="w-full p-3 border rounded-lg mb-4 h-64 focus:ring-2 focus:ring-blue-500"
               />
-              <button 
-                onClick={handleUploadSOP} 
+              <button
+                onClick={handleUploadSOP}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
               >
                 Upload SOP
@@ -481,9 +525,10 @@ const App = () => {
     );
   }
 
+  // ---------- ANALYTICS ----------
   if (currentView === 'analytics') {
     const allUsers = VALID_CREDENTIALS.filter(u => u.role === 'user');
-    
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="bg-white border-b shadow-sm">
@@ -496,13 +541,13 @@ const App = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button 
+              <button
                 onClick={() => setCurrentView('sop-list')}
                 className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors"
               >
                 ← Back to SOPs
               </button>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
               >
@@ -548,7 +593,7 @@ const App = () => {
               <p className="text-3xl font-bold text-gray-900">
                 {formatDuration(userActivities
                   .filter(a => a.activityType === 'sop_time')
-                  .reduce((sum, a) => sum + parseInt(a.timeSpent || 0), 0)
+                  .reduce((sum, a) => sum + (parseInt((a.timeSpent || '').replace(/\D/g, '')) || 0), 0)
                 )}
               </p>
             </div>
@@ -586,8 +631,8 @@ const App = () => {
                         <td className="py-3 px-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                             stats.averageScore >= 80 ? 'bg-green-100 text-green-700' :
-                            stats.averageScore >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                            stats.averageScore > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
+                              stats.averageScore >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                                stats.averageScore > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
                           }`}>
                             {stats.averageScore > 0 ? `${stats.averageScore}%` : 'N/A'}
                           </span>
@@ -606,10 +651,13 @@ const App = () => {
             </div>
           </div>
 
-          {/* Activity Log */}
+          {/* Recent Activity */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold mb-6">Recent Activity Log</h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
+              {userActivities.length === 0 && (
+                <p className="text-center text-gray-500 py-8">No activity recorded yet</p>
+              )}
               {userActivities.slice(0, 50).map(activity => (
                 <div key={activity.id} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg">
                   <div className="flex-shrink-0">
@@ -624,12 +672,12 @@ const App = () => {
                     <p className="text-sm font-semibold text-gray-900">{activity.userName}</p>
                     <p className="text-xs text-gray-600">
                       {activity.activityType === 'login' && 'Logged in'}
-                      {activity.activityType === 'logout' && `Logged out (Session: ${activity.sessionDuration})`}
-                      {activity.activityType === 'sop_access' && `Started training: ${activity.sopName}`}
-                      {activity.activityType === 'quiz_completed' && `Completed quiz: ${activity.sopName} - Score: ${activity.score} (${activity.percentage})`}
-                      {activity.activityType === 'quiz_retake' && `Retaking quiz: ${activity.sopName}`}
-                      {activity.activityType === 'sop_time' && `Spent ${activity.timeSpent} on ${activity.sopName}`}
-                      {activity.activityType === 'qa_interaction' && `Asked question in ${activity.sopName}`}
+                      {activity.activityType === 'logout' && `Logged out (Session: ${activity.sessionDuration || 'N/A'})`}
+                      {activity.activityType === 'sop_access' && `Started training: ${activity.sopName || ''}`}
+                      {activity.activityType === 'quiz_completed' && `Completed quiz: ${activity.sopName || ''} - Score: ${activity.score || ''} (${activity.percentage || ''})`}
+                      {activity.activityType === 'quiz_retake' && `Retaking quiz: ${activity.sopName || ''}`}
+                      {activity.activityType === 'sop_time' && `Spent ${activity.timeSpent || ''} on ${activity.sopName || ''}`}
+                      {activity.activityType === 'qa_interaction' && `Asked question in ${activity.sopName || ''}`}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {new Date(activity.timestamp).toLocaleString()}
@@ -637,86 +685,29 @@ const App = () => {
                   </div>
                 </div>
               ))}
-              {userActivities.length === 0 && (
-                <p className="text-3xl font-bold text-gray-900">
-                {userActivities.filter(a => a.activityType === 'quiz_completed').length}
-              </p>
             </div>
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Clock className="text-orange-600" size={24} />
-                <h3 className="font-semibold text-gray-700">Total Time Spent</h3>
-              </div>
-              <p className="text-3xl font-bold text-gray-900">
-                {
-                  formatDuration(
-                    userActivities
-                      .filter(a => a.activityType === 'sop_time')
-                      .reduce((sum, a) => {
-                        const mins = parseInt(a.timeSpent);
-                        return sum + (isNaN(mins) ? 0 : mins);
-                      }, 0)
-                  )
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* User Table */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h2 className="text-2xl font-bold mb-6">User Performance Overview</h2>
-
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100 text-left text-sm font-semibold">
-                  <th className="p-3 border-b">User Name</th>
-                  <th className="p-3 border-b">Email</th>
-                  <th className="p-3 border-b">SOPs Accessed</th>
-                  <th className="p-3 border-b">Total Quizzes</th>
-                  <th className="p-3 border-b">Avg Score</th>
-                  <th className="p-3 border-b">Time Spent</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allUsers.map((u, idx) => {
-                  const stats = getUserStats(u.email);
-                  return (
-                    <tr key={idx} className="border-b hover:bg-gray-50">
-                      <td className="p-3">{u.name}</td>
-                      <td className="p-3">{u.email}</td>
-                      <td className="p-3">{stats.totalSOPsAccessed}</td>
-                      <td className="p-3">{stats.totalQuizzes}</td>
-                      <td className="p-3">{stats.averageScore}%</td>
-                      <td className="p-3">{formatDuration(stats.totalTimeSpent)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
     );
   }
 
-  // -----------------------------------
-  // SOP DETAIL VIEW
-  // -----------------------------------
-  if (currentView === 'sop-detail') {
+  // ---------- SOP DETAIL ----------
+  if (currentView === 'sop-detail' && selectedSOP) {
+    const sop = sopDatabase[selectedSOP] || {};
     return (
       <div className="flex min-h-screen bg-gray-50">
-        
         {/* Sidebar */}
-        <div className={`${sidebarOpen ? "w-80" : "w-20"} bg-white shadow-xl transition-all`}>
+        <div className={`${sidebarOpen ? "w-72" : "w-20"} bg-white shadow-xl transition-all`}>
           <div className="p-4 border-b flex justify-between items-center">
-            <h2 className={`font-bold text-xl ${!sidebarOpen && "hidden"}`}>Navigation</h2>
-            <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+            <h2 className={`font-bold text-xl ${!sidebarOpen ? 'hidden' : ''}`}>Navigation</h2>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1">
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
 
           <div className="p-4 space-y-3">
-            <button 
+            <button
               onClick={() => setActiveMode('qa')}
               className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors ${
                 activeMode === 'qa' ? 'bg-blue-600 text-white' : 'bg-gray-100'
@@ -725,7 +716,7 @@ const App = () => {
               Q&A Trainer
             </button>
 
-            <button 
+            <button
               onClick={() => setActiveMode('quiz')}
               className={`w-full text-left px-4 py-3 rounded-lg font-semibold transition-colors ${
                 activeMode === 'quiz' ? 'bg-purple-600 text-white' : 'bg-gray-100'
@@ -734,7 +725,7 @@ const App = () => {
               Quiz Mode
             </button>
 
-            <button 
+            <button
               onClick={() => {
                 setSelectedSOP(null);
                 setCurrentView('sop-list');
@@ -749,15 +740,23 @@ const App = () => {
         {/* Main Content */}
         <div className="flex-1 p-8">
           {activeMode === 'qa' && (
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold mb-6">{sopDatabase[selectedSOP].name}</h2>
+            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">{sop.name}</h2>
+                  <p className="text-sm text-gray-600">{sop.category} • {sop.difficulty}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Started: {sopStartTime ? new Date(sopStartTime).toLocaleString() : '—'}</p>
+                </div>
+              </div>
 
-              <div className="h-[60vh] overflow-y-auto p-4 border rounded-lg mb-4 bg-gray-50">
+              <div className="h-[56vh] overflow-y-auto p-4 border rounded-lg mb-4 bg-gray-50">
                 {messages.map(m => (
                   <div key={m.id} className={`mb-4 ${m.type === 'user' ? 'text-right' : 'text-left'}`}>
-                    <p className={`inline-block px-4 py-2 rounded-xl ${
-                      m.type === 'user' 
-                        ? 'bg-blue-600 text-white' 
+                    <p className={`inline-block px-4 py-2 rounded-xl max-w-[80%] whitespace-pre-wrap ${
+                      m.type === 'user'
+                        ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-800'
                     }`}>
                       {m.text}
@@ -773,26 +772,41 @@ const App = () => {
                   placeholder="Ask a question about this SOP..."
                   value={input}
                   onChange={e => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
                 />
                 <button
                   onClick={handleSendMessage}
                   className="bg-blue-600 px-4 py-3 rounded-lg text-white font-semibold"
+                  title="Send question"
                 >
-                  <Send size={20} />
+                  <Send size={18} />
                 </button>
               </div>
             </div>
           )}
 
           {activeMode === 'quiz' && (
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold mb-6">Quiz: {sopDatabase[selectedSOP].name}</h2>
+            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">Quiz: {sop.name}</h2>
+                  <p className="text-sm text-gray-600">{currentQuizQuestions.length} questions</p>
+                </div>
+                <div>
+                  <button onClick={() => { setCurrentQuizQuestions(generateQuiz(selectedSOP) || []); setQuizAnswers({}); }} className="px-3 py-2 bg-gray-100 rounded-lg">Shuffle</button>
+                </div>
+              </div>
+
+              {currentQuizQuestions.length === 0 && (
+                <p className="text-gray-500 mb-4">No quiz available for this SOP.</p>
+              )}
+
               {currentQuizQuestions.map((q, idx) => (
-                <div key={idx} className="mb-6">
+                <div key={idx} className="mb-6 p-4 border rounded-lg">
                   <p className="font-semibold mb-3">{idx + 1}. {q.question}</p>
                   {q.options.map((opt, i) => (
-                    <label key={i} className="flex items-center gap-2 mb-1">
-                      <input 
+                    <label key={i} className="flex items-center gap-3 mb-2">
+                      <input
                         type="radio"
                         name={`q${idx}`}
                         checked={quizAnswers[idx] === i}
@@ -804,24 +818,33 @@ const App = () => {
                 </div>
               ))}
 
-              <button 
-                onClick={submitQuiz}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold mr-3"
-              >
-                Submit Quiz
-              </button>
-              <button 
-                onClick={retakeQuiz}
-                className="bg-gray-200 px-6 py-3 rounded-lg font-semibold"
-              >
-                Retake
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={submitQuiz}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold"
+                >
+                  Submit Quiz
+                </button>
+                <button
+                  onClick={retakeQuiz}
+                  className="bg-gray-200 px-6 py-3 rounded-lg font-semibold"
+                >
+                  Retake
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
     );
   }
+
+  // fallback (shouldn't happen)
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Unknown view. <button onClick={() => setCurrentView('sop-list')} className="ml-2 underline">Return</button></p>
+    </div>
+  );
 };
 
 export default App;
