@@ -600,6 +600,44 @@ const App = () => {
 
   // SOP Detail View
   return (
+<input 
+                  placeholder="Category" 
+                  value={newSOPData.category} 
+                  onChange={(e) => setNewSOPData(prev => ({ ...prev, category: e.target.value }))} 
+                  className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
+                />
+                <select 
+                  value={newSOPData.difficulty} 
+                  onChange={(e) => setNewSOPData(prev => ({ ...prev, difficulty: e.target.value }))} 
+                  className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Difficulty</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+                <textarea 
+                  placeholder="SOP Content" 
+                  value={newSOPData.content} 
+                  onChange={(e) => setNewSOPData(prev => ({ ...prev, content: e.target.value }))} 
+                  className="w-full p-3 border rounded-lg mb-4 h-64 focus:ring-2 focus:ring-blue-500" 
+                />
+                <button 
+                  onClick={handleUploadSOP} 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Upload SOP
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // SOP Detail View
+  const sop = selectedSOP ? sopDatabase[selectedSOP] : null;    
     <div className="flex h-screen bg-gray-50">
       {sidebarOpen && sop && (
         <div className="w-80 bg-white border-r flex flex-col">
