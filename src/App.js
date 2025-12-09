@@ -486,158 +486,141 @@ const App = () => {
     );
   }
 
-  const sop = selectedSOP ? sopDatabase[selectedSOP] : null;
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      {currentView === 'sop-list' ? (
-        <>
-          <div className="bg-white border-b shadow-sm">
-            <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <FileText className="text-blue-600" size={32} />
-                <div>
-                  <h1 className="text-2xl font-bold">SOP Training Platform</h1>
-                  <p className="text-sm text-gray-600">Welcome, {currentUser.name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {currentUser.role === 'admin' && (
-                  <button 
-                    onClick={() => setCurrentView('analytics')}
-                    className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-                  >
-                    <BarChart3 size={18} />
-                    Analytics
-                  </button>
-                )}
-                <button 
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
-                >
-                  Sign Out
-                </button>
+  if (currentView === 'sop-list') {
+    return (
+      <>
+        <div className="bg-white border-b shadow-sm">
+          <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <FileText className="text-blue-600" size={32} />
+              <div>
+                <h1 className="text-2xl font-bold">SOP Training Platform</h1>
+                <p className="text-sm text-gray-600">Welcome, {currentUser.name}</p>
               </div>
             </div>
-          </div>
-
-          <div className="max-w-7xl mx-auto p-8">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-4xl font-bold">SOP Library</h2>
-                <p className="text-gray-600 mt-2">{Object.keys(sopDatabase).length} SOPs Available</p>
-              </div>
+            <div className="flex items-center gap-3">
               {currentUser.role === 'admin' && (
                 <button 
-                  onClick={() => setShowUploadModal(true)} 
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
+                  onClick={() => setCurrentView('analytics')}
+                  className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
                 >
-                  <Upload size={20} /> Upload SOP
+                  <BarChart3 size={18} />
+                  Analytics
                 </button>
               )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.values(sopDatabase).map(s => (
-                <div key={s.id} className="bg-white rounded-xl shadow-lg p-6 relative group hover:shadow-xl transition-shadow">
-                  {currentUser.role === 'admin' && (
-                    <button 
-                      onClick={() => handleDeleteSOP(s.id)} 
-                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-opacity"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                  <div className="flex justify-between mb-4">
-                    <FileText className="text-blue-600" size={36} />
-                    <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                      s.difficulty === 'Advanced' ? 'bg-red-100 text-red-700' :
-                      s.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>{s.difficulty}</span>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{s.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{s.category}</p>
-                  <p className="text-sm text-gray-500 mb-4 line-clamp-2">{s.summary}</p>
-                  <button 
-                    onClick={() => handleSelectSOP(s.id)} 
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all"
-                  >
-                    Start Training
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {showUploadModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Upload New SOP</h2>
-                  <button onClick={() => setShowUploadModal(false)} className="text-gray-500 hover:text-gray-700">
-                    <X size={24} />
-                  </button>
-                </div>
-                <input 
-                  placeholder="SOP Name" 
-                  value={newSOPData.name} 
-                  onChange={(e) => setNewSOPData(prev => ({ ...prev, name: e.target.value }))} 
-                  className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
-                />
-                <input 
-                  placeholder="Category" 
-                  value={newSOPData.category} 
-                  onChange={(e) => setNewSOPData(prev => ({ ...prev, category: e.target.value }))} 
-                  className="w-full p-3 border rounded-lg mb-4 focus:ring-
-                    // ... after the activity log mapping closes
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition-colors"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  // SOP Detail View
-  return (
-<input 
-                  placeholder="Category" 
-                  value={newSOPData.category} 
-                  onChange={(e) => setNewSOPData(prev => ({ ...prev, category: e.target.value }))} 
-                  className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
-                />
-                <select 
-                  value={newSOPData.difficulty} 
-                  onChange={(e) => setNewSOPData(prev => ({ ...prev, difficulty: e.target.value }))} 
-                  className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Difficulty</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-                <textarea 
-                  placeholder="SOP Content" 
-                  value={newSOPData.content} 
-                  onChange={(e) => setNewSOPData(prev => ({ ...prev, content: e.target.value }))} 
-                  className="w-full p-3 border rounded-lg mb-4 h-64 focus:ring-2 focus:ring-blue-500" 
-                />
+        <div className="max-w-7xl mx-auto p-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-4xl font-bold">SOP Library</h2>
+              <p className="text-gray-600 mt-2">{Object.keys(sopDatabase).length} SOPs Available</p>
+            </div>
+            {currentUser.role === 'admin' && (
+              <button 
+                onClick={() => setShowUploadModal(true)} 
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
+              >
+                <Upload size={20} /> Upload SOP
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Object.values(sopDatabase).map(s => (
+              <div key={s.id} className="bg-white rounded-xl shadow-lg p-6 relative group hover:shadow-xl transition-shadow">
+                {currentUser.role === 'admin' && (
+                  <button 
+                    onClick={() => handleDeleteSOP(s.id)} 
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-opacity"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+                <div className="flex justify-between mb-4">
+                  <FileText className="text-blue-600" size={36} />
+                  <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                    s.difficulty === 'Advanced' ? 'bg-red-100 text-red-700' :
+                    s.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>{s.difficulty}</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2">{s.name}</h3>
+                <p className="text-sm text-gray-600 mb-2">{s.category}</p>
+                <p className="text-sm text-gray-500 mb-4 line-clamp-2">{s.summary}</p>
                 <button 
-                  onClick={handleUploadSOP} 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
+                  onClick={() => handleSelectSOP(s.id)} 
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all"
                 >
-                  Upload SOP
+                  Start Training
                 </button>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
+
+        {showUploadModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between mb-6">
+                <h2 className="text-2xl font-bold">Upload New SOP</h2>
+                <button onClick={() => setShowUploadModal(false)} className="text-gray-500 hover:text-gray-700">
+                  <X size={24} />
+                </button>
+              </div>
+              <input 
+                placeholder="SOP Name" 
+                value={newSOPData.name} 
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, name: e.target.value }))} 
+                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
+              />
+              <input 
+                placeholder="Category" 
+                value={newSOPData.category} 
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, category: e.target.value }))} 
+                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500" 
+              />
+              <select 
+                value={newSOPData.difficulty} 
+                onChange={(e) => setNewSOPData({ ...prev, difficulty: e.target.value }))} 
+                className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Difficulty</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+              <textarea 
+                placeholder="SOP Content" 
+                value={newSOPData.content} 
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, content: e.target.value }))} 
+                className="w-full p-3 border rounded-lg mb-4 h-64 focus:ring-2 focus:ring-blue-500" 
+              />
+              <button 
+                onClick={handleUploadSOP} 
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
+              >
+                Upload SOP
+              </button>
+            </div>
+          </div>
+        )}
       </>
     );
   }
 
   // SOP Detail View
-  const sop = selectedSOP ? sopDatabase[selectedSOP] : null;    
+  const sop = selectedSOP ? sopDatabase[selectedSOP] : null;
+  
+  return (
     <div className="flex h-screen bg-gray-50">
       {sidebarOpen && sop && (
         <div className="w-80 bg-white border-r flex flex-col">
