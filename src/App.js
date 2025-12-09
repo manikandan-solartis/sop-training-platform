@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle, Clock, Users, BarChart3, Activity } from 'lucide-react';
+import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle, Clock, Users, BarChart3, Activity, Mic, Volume2, VolumeX, MicOff } from 'lucide-react';
 import { sopData } from './sopData';
 import { getSmartAnswer } from './aiTrainer';
 import { generateQuiz } from './quizGenerator';
@@ -41,6 +41,10 @@ const App = () => {
     const saved = localStorage.getItem('userActivities');
     return saved ? JSON.parse(saved) : [];
   });
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [recognition, setRecognition] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -50,6 +54,84 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem('userActivities', JSON.stringify(userActivities));
   }, [userActivities]);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+  }, []);
+
+  // Text-to-Speech function
+  const speak = (text) => {
+    if (!voiceEnabled) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Clean text for better speech (remove markdown and special characters)
+    const cleanText = text
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/\n+/g, '. ')
+      .replace(/•/g, '')
+      .replace(/📍|🎯|✅|💡|⬆️|⬇️|➡️|⬅️|❌|📊|🏁|💭|📝|💻|📧|🔄|⏰|⌨️|🆘|🔍|🤔/g, '');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Stop speaking
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
+  // Start voice recognition
+  const startListening = () => {
+    if (recognition && !isListening) {
+      setIsListening(true);
+      recognition.start();
+    }
+  };
+
+  // Stop voice recognition
+  const stopListening = () => {
+    if (recognition && isListening) {
+      recognition.stop();
+      setIsListening(false);
+    }
+  };
 
   const logActivity = (activityType, details = {}) => {
     if (!currentUser) return;
@@ -143,6 +225,10 @@ const App = () => {
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+    
+    // Stop any ongoing speech
+    stopSpeaking();
+    
     setMessages(prev => [...prev, { id: prev.length + 1, type: 'user', text: input }]);
     const userInput = input;
     setInput('');
@@ -155,6 +241,11 @@ const App = () => {
     
     setMessages(prev => [...prev, { id: prev.length + 1, type: 'assistant', text: response }]);
     setLoading(false);
+
+    // Auto-speak the response if voice is enabled
+    if (voiceEnabled) {
+      setTimeout(() => speak(response), 300);
+    }
 
     logActivity('qa_interaction', {
       sopId: selectedSOP,
@@ -590,7 +681,7 @@ const App = () => {
               />
               <select 
                 value={newSOPData.difficulty} 
-                onChange={(e) => setNewSOPData(prev => ({ ...prev, difficulty: e.target.value }))} 
+                onChange={(e) => setNewSOPData(prev=> ({ ...prev, difficulty: e.target.value }))} 
                 className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Difficulty</option>
@@ -668,11 +759,58 @@ const App = () => {
 
         {activeMode === 'qa' && (
           <div className="flex-1 flex flex-col">
+            {/* Voice Controls Header */}
+            <div className="bg-blue-50 border-b border-blue-100 p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isListening ? 'bg-red-100 text-red-700' : 'bg-white'}`}>
+                  {isListening ? (
+                    <>
+                      <Mic className="animate-pulse" size={18} />
+                      <span className="text-sm font-semibold">Listening...</span>
+                    </>
+                  ) : (
+                    <>
+                      <MicOff size={18} className="text-gray-500" />
+                      <span className="text-sm text-gray-600">Voice Ready</span>
+                    </>
+                  )}
+                </div>
+                
+                {isSpeaking && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-100 text-green-700">
+                    <Volume2 className="animate-pulse" size={18} />
+                    <span className="text-sm font-semibold">Speaking...</span>
+                  </div>
+                )}
+              </div>
+              
+              <button
+                onClick={() => setVoiceEnabled(!voiceEnabled)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  voiceEnabled 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                }`}
+              >
+                {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                <span className="text-sm">{voiceEnabled ? 'Voice On' : 'Voice Off'}</span>
+              </button>
+            </div>
+
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.map(msg => (
                 <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xl p-4 rounded-lg ${msg.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
+                  <div className={`max-w-xl p-4 rounded-lg ${msg.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200'} relative group`}>
                     <pre className="whitespace-pre-wrap font-sans text-sm">{msg.text}</pre>
+                    {msg.type === 'assistant' && (
+                      <button
+                        onClick={() => speak(msg.text)}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 transition-all"
+                        title="Read aloud"
+                      >
+                        <Volume2 size={16} className="text-blue-600" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -685,20 +823,49 @@ const App = () => {
             </div>
             <div className="border-t p-4 bg-white">
               <div className="flex gap-2">
+                <button
+                  onClick={isListening ? stopListening : startListening}
+                  disabled={!recognition}
+                  className={`px-4 py-3 rounded-lg font-semibold transition-all ${
+                    isListening 
+                      ? 'bg-red-600 hover:bg-red-700 text-white' 
+                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+                  } ${!recognition ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={!recognition ? 'Voice recognition not supported in your browser' : 'Click to speak'}
+                >
+                  {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                </button>
+                
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask about the SOP..."
+                  placeholder={isListening ? "Listening... speak now" : "Ask about the SOP or click mic to speak..."}
                   className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  disabled={isListening}
                 />
-                <button 
-                  onClick={handleSendMessage} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-                >
-                  <Send size={20} />
-                </button>
+                
+                {isSpeaking ? (
+                  <button 
+                    onClick={stopSpeaking} 
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
+                    title="Stop speaking"
+                  >
+                    <VolumeX size={20} />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleSendMessage} 
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+                    title="Send message"
+                  >
+                    <Send size={20} />
+                  </button>
+                )}
               </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                💡 Tip: Click the microphone to ask questions with your voice • Responses are read aloud automatically
+              </p>
             </div>
           </div>
         )}
