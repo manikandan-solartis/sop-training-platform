@@ -590,7 +590,7 @@ const App = () => {
               />
               <select 
                 value={newSOPData.difficulty} 
-                onChange={(e) => setNewSOPData({ ...prev, difficulty: e.target.value }))} 
+                onChange={(e) => setNewSOPData(prev => ({ ...prev, difficulty: e.target.value }))} 
                 className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select Difficulty</option>
