@@ -207,7 +207,59 @@ useEffect(() => {
       setSOPStartTime(null);
     }, 100);
   };
+  // Add this function inside your App component, around line 200 (after handleLogout)
 
+const handleUploadSOP = () => {
+  // Validate input
+  if (!newSOPData.name || !newSOPData.category || !newSOPData.difficulty || !newSOPData.content) {
+    alert('Please fill in all fields');
+    return;
+  }
+
+  if (newSOPData.content.length < 100) {
+    alert('SOP content must be at least 100 characters');
+    return;
+  }
+
+  // Generate unique ID
+  const sopId = newSOPData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  
+  // Check if SOP ID already exists
+  if (sopDatabase[sopId]) {
+    alert('An SOP with this name already exists. Please use a different name.');
+    return;
+  }
+
+  // Create new SOP object
+  const newSOP = {
+    id: sopId,
+    name: newSOPData.name,
+    category: newSOPData.category,
+    difficulty: newSOPData.difficulty,
+    summary: newSOPData.content.substring(0, 150) + '...',
+    content: newSOPData.content,
+    keywords: [] // Empty keywords array for new SOPs
+  };
+
+  // Add to database
+  setSOPDatabase(prev => ({
+    ...prev,
+    [sopId]: newSOP
+  }));
+
+  // Log activity
+  logActivity('sop_created', {
+    sopId: sopId,
+    sopName: newSOPData.name,
+    sopCategory: newSOPData.category
+  });
+
+  // Reset form and close modal
+  setNewSOPData({ name: '', category: '', difficulty: '', content: '' });
+  setShowUploadModal(false);
+  
+  alert('SOP uploaded successfully!');
+};
   const handleSelectSOP = async (sopId) => {
   if (selectedSOP && sopStartTime) {
     const timeSpent = Math.round((new Date() - sopStartTime) / 1000 / 60);
