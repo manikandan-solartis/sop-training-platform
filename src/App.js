@@ -288,18 +288,6 @@ const handleSendMessage = async () => {
   }
 };
 
-    // Auto-speak the response if voice is enabled
-    if (voiceEnabled) {
-      setTimeout(() => speak(response), 300);
-    }
-
-    logActivity('qa_interaction', {
-      sopId: selectedSOP,
-      sopName: sop.name,
-      question: userInput.substring(0, 100)
-    });
-  };
-
   const submitQuiz = () => {
     let correct = 0;
     currentQuizQuestions.forEach((q, idx) => {
