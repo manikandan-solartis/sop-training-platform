@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle, Clock, Users, BarChart3, Activity, Mic, Volume2, VolumeX, MicOff } from 'lucide-react';
+import { Send, FileText, Menu, X, Upload, Trash2, AlertCircle, Clock, Users, BarChart3, Activity, Mic, Volume2, VolumeX, MicOff, Sparkles } from 'lucide-react';
 import { sopData } from './sopData';
 import { getSmartAnswer } from './aiTrainer';
-import { generateQuiz } from './quizGenerator';
+import { generateQuiz, isAIGenerationAvailable } from './quizGenerator';
+import { getProviderInfo } from './services/llmService';
 
 const VALID_CREDENTIALS = [
   { email: 'admin@solartis.com', password: 'admin123', name: 'Admin User', role: 'admin' },
@@ -46,14 +47,25 @@ const App = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [recognition, setRecognition] = useState(null);
   const messagesEndRef = useRef(null);
-
+const [aiEnabled, setAiEnabled] = useState(false);
+const [aiProvider, setAiProvider] = useState('');
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    localStorage.setItem('userActivities', JSON.stringify(userActivities));
-  }, [userActivities]);
+  // Check AI configuration
+useEffect(() => {
+  const info = getProviderInfo();
+  setAiEnabled(info.configured);
+  setAiProvider(info.provider);
+  
+  if (info.configured) {
+    console.log('✅ AI enabled with provider:', info.provider);
+  } else {
+    console.warn('⚠️ AI not configured. Using pattern matching only.');
+  }
+}, []);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -196,51 +208,85 @@ const App = () => {
     }, 100);
   };
 
-  const handleSelectSOP = (sopId) => {
-    if (selectedSOP && sopStartTime) {
-      const timeSpent = Math.round((new Date() - sopStartTime) / 1000 / 60);
-      logActivity('sop_time', {
-        sopId: selectedSOP,
-        sopName: sopDatabase[selectedSOP].name,
-        timeSpent: `${timeSpent} minutes`
-      });
-    }
+  const handleSelectSOP = async (sopId) => {
+  if (selectedSOP && sopStartTime) {
+    const timeSpent = Math.round((new Date() - sopStartTime) / 1000 / 60);
+    logActivity('sop_time', {
+      sopId: selectedSOP,
+      sopName: sopDatabase[selectedSOP].name,
+      timeSpent: `${timeSpent} minutes`
+    });
+  }
 
-    setSelectedSOP(sopId);
-    setActiveMode('qa');
-    setSOPStartTime(new Date());
-    const sop = sopDatabase[sopId];
-    
-    setMessages([{ 
-      id: 1, 
-      type: 'assistant', 
-      text: `Welcome to "${sop.name}"!\n\n${sop.summary}\n\nI can help you with:\n• Understanding specific steps\n• Applications and systems used\n• Email addresses and escalation contacts\n• Differences between processes\n• SLA and timing requirements\n\nWhat would you like to know?`
-    }]);
-    setCurrentView('sop-detail');
-    setQuizAnswers({});
-    setCurrentQuizQuestions(generateQuiz(sopId));
+  setSelectedSOP(sopId);
+  setActiveMode('qa');
+  setSOPStartTime(new Date());
+  const sop = sopDatabase[sopId];
+  
+  setMessages([{ 
+    id: 1, 
+    type: 'assistant', 
+    text: `Welcome to "${sop.name}"!\n\n${sop.summary}\n\n${aiEnabled ? '🤖 AI-powered assistance enabled!\n\n' : ''}I can help you with:\n• Understanding specific steps\n• Applications and systems used\n• Email addresses and escalation contacts\n• Differences between processes\n• SLA and timing requirements\n\nWhat would you like to know?`
+  }]);
+  
+  setCurrentView('sop-detail');
+  setQuizAnswers({});
+  
+  // Generate quiz with AI if available
+  try {
+    const questions = await generateQuiz(sopId, sop.content, aiEnabled);
+    setCurrentQuizQuestions(questions);
+  } catch (error) {
+    console.error('Quiz generation error:', error);
+    const questions = await generateQuiz(sopId, '', false);
+    setCurrentQuizQuestions(questions);
+  }
 
-    logActivity('sop_access', { sopId, sopName: sop.name, sopCategory: sop.category });
-  };
+  logActivity('sop_access', { 
+    sopId, 
+    sopName: sop.name, 
+    sopCategory: sop.category,
+    aiEnabled 
+  });
+};
 
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    
-    // Stop any ongoing speech
-    stopSpeaking();
-    
-    setMessages(prev => [...prev, { id: prev.length + 1, type: 'user', text: input }]);
-    const userInput = input;
-    setInput('');
-    setLoading(true);
-    
-    await new Promise(r => setTimeout(r, 800));
-    
+const handleSendMessage = async () => {
+  if (!input.trim()) return;
+  
+  stopSpeaking();
+  
+  setMessages(prev => [...prev, { id: prev.length + 1, type: 'user', text: input }]);
+  const userInput = input;
+  setInput('');
+  setLoading(true);
+  
+  try {
     const sop = sopDatabase[selectedSOP];
-    const response = getSmartAnswer(userInput, sop.content, sop.keywords);
+    const response = await getSmartAnswer(userInput, sop.content, sop.keywords);
     
     setMessages(prev => [...prev, { id: prev.length + 1, type: 'assistant', text: response }]);
+    
+    if (voiceEnabled) {
+      setTimeout(() => speak(response), 300);
+    }
+
+    logActivity('qa_interaction', {
+      sopId: selectedSOP,
+      sopName: sop.name,
+      question: userInput.substring(0, 100),
+      aiPowered: aiEnabled
+    });
+  } catch (error) {
+    console.error('Response generation error:', error);
+    setMessages(prev => [...prev, { 
+      id: prev.length + 1, 
+      type: 'assistant', 
+      text: `I apologize, but I encountered an error. ${aiEnabled ? 'Using basic pattern matching instead.' : 'Please try rephrasing your question.'}\n\nError: ${error.message}` 
+    }]);
+  } finally {
     setLoading(false);
+  }
+};
 
     // Auto-speak the response if voice is enabled
     if (voiceEnabled) {
@@ -274,34 +320,27 @@ const App = () => {
     alert(`Score: ${correct}/${currentQuizQuestions.length} (${pct.toFixed(0)}%)\n\n${msg}`);
   };
 
-  const retakeQuiz = () => {
-    setQuizAnswers({});
-    setCurrentQuizQuestions(generateQuiz(selectedSOP));
-    logActivity('quiz_retake', { sopId: selectedSOP, sopName: sopDatabase[selectedSOP].name });
-  };
-
-  const handleUploadSOP = () => {
-    if (!newSOPData.name || !newSOPData.content) {
-      alert('Please fill SOP name and content!');
-      return;
-    }
-    const newId = newSOPData.name.toLowerCase().replace(/\s+/g, '-');
-    setSOPDatabase(prev => ({
-      ...prev,
-      [newId]: { ...newSOPData, id: newId, summary: 'Custom SOP', keywords: [] }
-    }));
+const retakeQuiz = async () => {
+  setQuizAnswers({});
+  setLoading(true);
+  
+  try {
+    const sop = sopDatabase[selectedSOP];
+    const questions = await generateQuiz(selectedSOP, sop.content, aiEnabled);
+    setCurrentQuizQuestions(questions);
     
-    logActivity('sop_uploaded', {
-      sopId: newId,
-      sopName: newSOPData.name,
-      sopCategory: newSOPData.category,
-      sopDifficulty: newSOPData.difficulty
+    logActivity('quiz_retake', { 
+      sopId: selectedSOP, 
+      sopName: sop.name,
+      aiGenerated: aiEnabled
     });
-
-    setNewSOPData({ name: '', category: '', difficulty: '', content: '' });
-    setShowUploadModal(false);
-    alert('SOP uploaded successfully!');
-  };
+  } catch (error) {
+    console.error('Quiz generation error:', error);
+    alert('Failed to generate new quiz. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteSOP = (sopId) => {
     if (window.confirm(`Delete "${sopDatabase[sopId].name}"?`)) {
@@ -783,7 +822,14 @@ const App = () => {
                   </div>
                 )}
               </div>
-              
+                {aiEnabled && (
+  <div className="flex items-center gap-2 px-3 py-2 bg-purple-100 rounded-lg">
+    <Sparkles className="text-purple-600" size={16} />
+    <span className="text-xs font-semibold text-purple-700">
+      AI: {aiProvider.toUpperCase()}
+    </span>
+  </div>
+)}              
               <button
                 onClick={() => setVoiceEnabled(!voiceEnabled)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
