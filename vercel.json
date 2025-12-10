@@ -26,9 +26,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_GROQ_API_KEY": "@groq_api_key",
-    "REACT_APP_LLM_PROVIDER": "groq"
-  }
+  ]
 }
