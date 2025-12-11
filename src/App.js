@@ -367,26 +367,6 @@ const handleSendMessage = async () => {
   }
 };
 
-  const submitQuiz = () => {
-    let correct = 0;
-    currentQuizQuestions.forEach((q, idx) => {
-      if (quizAnswers[idx] === q.correct) correct++;
-    });
-    const pct = (correct / currentQuizQuestions.length) * 100;
-    const msg = pct === 100 ? '🎉 Perfect!' : pct >= 80 ? '👍 Great!' : pct >= 60 ? '📚 Good!' : '📖 Keep practicing!';
-    
-    logActivity('quiz_completed', {
-      sopId: selectedSOP,
-      sopName: sopDatabase[selectedSOP].name,
-      score: `${correct}/${currentQuizQuestions.length}`,
-      percentage: `${pct.toFixed(0)}%`,
-      totalQuestions: currentQuizQuestions.length,
-      correctAnswers: correct
-    });
-
-    alert(`Score: ${correct}/${currentQuizQuestions.length} (${pct.toFixed(0)}%)\n\n${msg}`);
-  };
-
 const retakeQuiz = async () => {
   setQuizAnswers({});
   setLoading(true);
