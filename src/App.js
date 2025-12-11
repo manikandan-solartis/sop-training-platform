@@ -57,6 +57,9 @@ const [aiProvider, setAiProvider] = useState('');
   const [timeLeft, setTimeLeft] = useState(45);
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [questionTimings, setQuestionTimings] = useState({});
+  const [questionExplanations, setQuestionExplanations] = useState({});
+  const [explanationsLoading, setExplanationsLoading] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -485,6 +488,50 @@ const handleContinueToNext = () => {
 };
 
 /**
+ * Generate explanations for each question using `getSmartAnswer` if not provided
+ */
+const generateExplanations = async () => {
+  if (!selectedSOP) return;
+  if (!currentQuizQuestions || currentQuizQuestions.length === 0) return;
+
+  setExplanationsLoading(true);
+  const sop = sopDatabase[selectedSOP];
+
+  try {
+    const promises = currentQuizQuestions.map(async (q, idx) => {
+      // Use existing explanation if present
+      if (q.explanation && q.explanation.trim()) return q.explanation;
+
+      const correctIdx = q.correct;
+      const correctText = q.options && q.options[correctIdx] ? q.options[correctIdx] : 'the correct option';
+      const optionsText = q.options ? q.options.map((o, i) => `${i}: ${o}`).join(' | ') : '';
+
+      const prompt = `Explain concisely why the correct answer is ${correctText} for the question below, and provide a short practical example relevant to the SOP.
+Question: ${q.q}
+Options: ${optionsText}
+Correct option index: ${correctIdx}`;
+
+      const explanation = await getSmartAnswer(prompt, sop.content, sop.keywords);
+      return explanation;
+    });
+
+    const explanations = await Promise.all(promises);
+    const mapping = explanations.reduce((acc, text, i) => ({ ...acc, [i]: text }), {});
+    setQuestionExplanations(mapping);
+
+    logActivity('quiz_review_generated', {
+      sopId: selectedSOP,
+      sopName: sop.name,
+      count: currentQuizQuestions.length
+    });
+  } catch (error) {
+    console.error('Error generating explanations:', error);
+  } finally {
+    setExplanationsLoading(false);
+  }
+};
+
+/**
  * Submit quiz and calculate score with time penalties
  */
 const submitQuiz = () => {
@@ -528,6 +575,15 @@ const submitQuiz = () => {
 
   setQuizScore(finalScore);
   setQuizCompleted(true);
+
+  // Start generating explanations for review (async, non-blocking)
+  (async () => {
+    try {
+      await generateExplanations();
+    } catch (e) {
+      console.error('Failed to generate explanations:', e);
+    }
+  })();
 
   // Log activity with detailed scoring
   logActivity('quiz_completed', {
@@ -1177,13 +1233,62 @@ const submitQuiz = () => {
               </div>
             </div>
           )}
-          <button 
-            onClick={retakeQuiz}
-            disabled={loading}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all shadow-lg disabled:opacity-50"
-          >
-            {loading ? 'Generating New Quiz...' : '🔄 Take New Quiz'}
-          </button>
+          <div className="flex items-center justify-center gap-4">
+            <button 
+              onClick={retakeQuiz}
+              disabled={loading}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold text-lg transition-all shadow-lg disabled:opacity-50"
+            >
+              {loading ? 'Generating New Quiz...' : '🔄 Take New Quiz'}
+            </button>
+
+            <button
+              onClick={() => setShowReview(prev => !prev)}
+              className="bg-white border px-6 py-3 rounded-lg font-semibold hover:shadow"
+            >
+              {showReview ? 'Hide Review' : 'Show Review'}
+            </button>
+          </div>
+
+          {/* Review Section */}
+          {showReview && (
+            <div className="mt-8 text-left">
+              <h3 className="text-2xl font-semibold mb-4">Review - Questions & Answers</h3>
+              {explanationsLoading && (
+                <div className="mb-4 text-sm text-gray-600">Generating explanations...</div>
+              )}
+
+              <div className="space-y-4">
+                {currentQuizQuestions.map((q, idx) => {
+                  const userSel = quizAnswers[idx];
+                  const correctIdx = q.correct;
+                  const explanation = questionExplanations[idx];
+                  return (
+                    <div key={idx} className="bg-gray-50 p-4 rounded-lg border">
+                      <div className="mb-2 font-semibold">{idx + 1}. {q.q}</div>
+                      <div className="ml-4 mb-2">
+                        {q.options && q.options.map((opt, j) => (
+                          <div key={j} className={`py-1 ${j === correctIdx ? 'text-green-700 font-semibold' : ''} ${j === userSel && j !== correctIdx ? 'text-red-700' : ''}`}>
+                            <span className="mr-2">{String.fromCharCode(65 + j)}.</span>{opt}
+                            {j === userSel && (
+                              <span className="ml-3 text-sm text-gray-600">(Your answer)</span>
+                            )}
+                            {j === correctIdx && (
+                              <span className="ml-3 text-sm text-green-600">(Correct)</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="ml-4 text-sm text-gray-700">
+                        <div className="font-semibold">Explanation:</div>
+                        <div>{explanation ? explanation : <em>No explanation available.</em>}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         // Quiz in progress - show current question
