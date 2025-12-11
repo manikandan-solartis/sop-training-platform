@@ -370,14 +370,23 @@ const handleSendMessage = async () => {
 const retakeQuiz = async () => {
   setQuizAnswers({});
   setLoading(true);
-  
+
   try {
     const sop = sopDatabase[selectedSOP];
     const questions = await generateQuiz(selectedSOP, sop.content, aiEnabled);
+    if (!questions || questions.length === 0) throw new Error('No questions generated');
+
+    // Reset quiz state and start fresh
     setCurrentQuizQuestions(questions);
-    
-    logActivity('quiz_retake', { 
-      sopId: selectedSOP, 
+    setCurrentQuestionIndex(0);
+    setQuizCompleted(false);
+    setQuizScore(null);
+    setQuestionTimings({});
+    setQuestionStartTime(Date.now());
+    setTimeLeft(45);
+
+    logActivity('quiz_retake', {
+      sopId: selectedSOP,
       sopName: sop.name,
       aiGenerated: aiEnabled
     });
@@ -393,14 +402,54 @@ const retakeQuiz = async () => {
  * Start the quiz - initialize first question and timer
  */
 const startQuiz = () => {
-  setCurrentQuestionIndex(0);
-  setQuizCompleted(false);
-  setQuizScore(null);
-  setQuizAnswers({});
-  setQuestionStartTime(Date.now());
-  setTimeLeft(45);
-  setQuestionTimings({});
+  (async () => {
+    // If no questions are present, try to generate them first
+    if (!currentQuizQuestions || currentQuizQuestions.length === 0) {
+      setLoading(true);
+      try {
+        const sop = sopDatabase[selectedSOP];
+        const questions = await generateQuiz(selectedSOP, sop.content, aiEnabled);
+        setCurrentQuizQuestions(questions);
+      } catch (err) {
+        console.error('Quiz generation failed on start:', err);
+        alert('Failed to generate quiz questions. Please try again.');
+        setLoading(false);
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    setCurrentQuestionIndex(0);
+    setQuizCompleted(false);
+    setQuizScore(null);
+    setQuizAnswers({});
+    setQuestionStartTime(Date.now());
+    setTimeLeft(45);
+    setQuestionTimings({});
+  })();
 };
+
+// Auto-advance / auto-submit when timer reaches zero
+useEffect(() => {
+  if (quizCompleted || currentQuizQuestions.length === 0 || !questionStartTime) return;
+  if (timeLeft !== 0) return;
+
+  // Record timing for current question and advance or finish
+  const elapsedTime = Math.floor((Date.now() - questionStartTime) / 1000);
+  setQuestionTimings(prev => ({
+    ...prev,
+    [currentQuestionIndex]: elapsedTime
+  }));
+
+  if (currentQuestionIndex < currentQuizQuestions.length - 1) {
+    setCurrentQuestionIndex(prev => prev + 1);
+    setQuestionStartTime(Date.now());
+    setTimeLeft(45);
+  } else {
+    submitQuiz();
+  }
+}, [timeLeft]);
 
 /**
  * Handle answer selection for current question
