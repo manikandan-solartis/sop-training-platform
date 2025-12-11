@@ -75,6 +75,4 @@ export const isAIGenerationAvailable = () => {
   }
 };
 
-export { quizData };
-
 export default generateQuiz;
