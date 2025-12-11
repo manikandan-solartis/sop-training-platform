@@ -957,48 +957,166 @@ const retakeQuiz = async () => {
         )}
 
         {activeMode === 'quiz' && (
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-                <h2 className="text-2xl font-bold mb-4">Quiz: {sop.name}</h2>
-                <p className="text-gray-600 mb-4">{currentQuizQuestions.length} questions • Select your answers</p>
+  <div className="flex-1 overflow-y-auto p-6">
+    <div className="max-w-3xl mx-auto">
+      {currentQuizQuestions.length === 0 ? (
+        // Quiz not started yet
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Test Your Knowledge?</h2>
+          <p className="text-gray-600 mb-6 text-lg">
+            {aiEnabled ? '🤖 AI will generate 10 unique questions just for you!' : 'Take a 10-question quiz on this SOP'}
+          </p>
+          <div className="bg-blue-50 border-l-4 border-blue-600 p-6 mb-6 text-left">
+            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+              <Activity className="text-blue-600" size={24} />
+              Quiz Rules
+            </h3>
+            <ul className="space-y-2 text-gray-700">
+              <li>• <strong>10 questions</strong> will be generated uniquely for you</li>
+              <li>• <strong>45 seconds</strong> per question</li>
+              <li>• <strong>Full marks (10 points)</strong> if answered within time</li>
+              <li>• <strong>Reduced marks</strong> for exceeding 45 seconds</li>
+              <li>• One question at a time - click <strong>Continue</strong> to proceed</li>
+              <li>• {aiEnabled ? 'Questions generated fresh every time - no two quizzes are the same!' : 'Questions randomized from question bank'}</li>
+            </ul>
+          </div>
+          <button 
+            onClick={startQuiz}
+            disabled={loading}
+            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all shadow-lg disabled:opacity-50"
+          >
+            {loading ? 'Generating Questions...' : '🚀 Start Quiz'}
+          </button>
+        </div>
+      ) : quizCompleted ? (
+        // Quiz completed - show results
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+          <h2 className="text-3xl font-bold mb-4">Quiz Complete! 🎉</h2>
+          {quizScore && (
+            <div className="space-y-4 mb-6">
+              <div className="text-6xl font-bold text-blue-600">
+                {quizScore.percentage.toFixed(1)}%
               </div>
-              {currentQuizQuestions.map((q, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 mb-4 shadow-sm">
-                  <p className="font-bold mb-4">Q{i+1}. {q.q}</p>
-                  {q.options.map((opt, j) => (
-                    <div 
-                      key={j} 
-                      className={`p-3 mb-2 border rounded-lg cursor-pointer transition-colors ${
-                        quizAnswers[i] === j 
-                          ? 'bg-blue-100 border-blue-500' 
-                          : 'hover:bg-gray-50 border-gray-200'
-                      }`} 
-                      onClick={() => setQuizAnswers(prev => ({ ...prev, [i]: j }))}
-                    >
-                      {opt}
-                    </div>
-                  ))}
-                </div>
-              ))}
-              <div className="flex gap-4">
-                <button 
-                  onClick={submitQuiz} 
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Submit Quiz
-                </button>
-                <button 
-                  onClick={retakeQuiz} 
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-colors"
-                >
-                  New Questions
-                </button>
+              <div className="text-xl text-gray-700">
+                Score: <strong>{quizScore.totalScore}</strong> / {quizScore.maxScore} points
+              </div>
+              <div className="text-lg text-gray-600">
+                Correct Answers: <strong>{quizScore.correct}</strong> / {currentQuizQuestions.length}
+              </div>
+              <div className={`text-2xl font-bold ${
+                quizScore.percentage === 100 ? 'text-green-600' :
+                quizScore.percentage >= 80 ? 'text-blue-600' :
+                quizScore.percentage >= 60 ? 'text-yellow-600' :
+                'text-orange-600'
+              }`}>
+                {quizScore.percentage === 100 ? '🎉 Perfect Score!' :
+                 quizScore.percentage >= 80 ? '👍 Great Job!' :
+                 quizScore.percentage >= 60 ? '📚 Good Effort!' :
+                 '📖 Keep Practicing!'}
               </div>
             </div>
+          )}
+          <button 
+            onClick={retakeQuiz}
+            disabled={loading}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all shadow-lg disabled:opacity-50"
+          >
+            {loading ? 'Generating New Quiz...' : '🔄 Take New Quiz'}
+          </button>
+        </div>
+      ) : (
+        // Quiz in progress - show current question
+        <>
+          <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">
+                Question {currentQuestionIndex + 1} of {currentQuizQuestions.length}
+              </h2>
+              <div className={`text-xl font-bold px-4 py-2 rounded-lg ${
+                timeLeft <= 10 ? 'bg-red-100 text-red-700 animate-pulse' :
+                timeLeft <= 20 ? 'bg-yellow-100 text-yellow-700' :
+                'bg-green-100 text-green-700'
+              }`}>
+                ⏱️ {timeLeft}s
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all"
+                style={{ width: `${((currentQuestionIndex + 1) / currentQuizQuestions.length) * 100}%` }}
+              />
+            </div>
+            {aiEnabled && (
+              <div className="bg-purple-50 border-l-4 border-purple-600 p-3 mb-4">
+                <span className="text-sm font-semibold text-purple-700 flex items-center gap-2">
+                  <Sparkles size={16} />
+                  AI-Generated Question - Unique to your session
+                </span>
+              </div>
+            )}
           </div>
-        )}
 
+          <div className="bg-white rounded-xl p-6 mb-4 shadow-sm">
+            <p className="font-bold text-lg mb-6">
+              {currentQuizQuestions[currentQuestionIndex]?.q}
+            </p>
+            <div className="space-y-3">
+              {currentQuizQuestions[currentQuestionIndex]?.options.map((opt, j) => (
+                <div 
+                  key={j} 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    quizAnswers[currentQuestionIndex] === j 
+                      ? 'bg-blue-100 border-blue-500 shadow-md' 
+                      : 'hover:bg-gray-50 border-gray-200 hover:border-gray-400'
+                  }`} 
+                  onClick={() => handleAnswerSelect(currentQuestionIndex, j)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      quizAnswers[currentQuestionIndex] === j 
+                        ? 'bg-blue-500 border-blue-500' 
+                        : 'border-gray-300'
+                    }`}>
+                      {quizAnswers[currentQuestionIndex] === j && (
+                        <div className="w-3 h-3 bg-white rounded-full" />
+                      )}
+                    </div>
+                    <span className={quizAnswers[currentQuestionIndex] === j ? 'font-semibold' : ''}>
+                      {opt}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              {timeLeft > 45 ? (
+                <span className="text-orange-600 font-semibold">
+                  ⚠️ Time exceeded - marks will be reduced
+                </span>
+              ) : timeLeft <= 10 ? (
+                <span className="text-red-600 font-semibold animate-pulse">
+                  ⚠️ Hurry! Time running out!
+                </span>
+              ) : (
+                <span>Select your answer carefully</span>
+              )}
+            </div>
+            <button 
+              onClick={handleContinueToNext}
+              disabled={quizAnswers[currentQuestionIndex] === undefined}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            >
+              {currentQuestionIndex < currentQuizQuestions.length - 1 ? 'Continue →' : 'Finish Quiz'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
         {activeMode === 'content' && sop && (
           <div className="flex-1 overflow-y-auto p-6">
             <div className="max-w-4xl mx-auto bg-white rounded-xl p-8 shadow-sm">
