@@ -6,16 +6,70 @@ import { generateQuiz, isAIGenerationAvailable } from './quizGenerator';
 import { getProviderInfo } from './services/llmService';
 
 const VALID_CREDENTIALS = [
-  { email: 'admin@solartis.com', password: 'admin123', name: 'Admin User', role: 'admin' },
-  { email: 'user1@solartis.com', password: 'user123', name: 'User 1', role: 'user' },
-  { email: 'user2@solartis.com', password: 'user123', name: 'User 2', role: 'user' },
-  { email: 'user3@solartis.com', password: 'user123', name: 'User 3', role: 'user' },
-  { email: 'user4@solartis.com', password: 'user123', name: 'User 4', role: 'user' },
-  { email: 'user5@solartis.com', password: 'user123', name: 'User 5', role: 'user' },
-  { email: 'user6@solartis.com', password: 'user123', name: 'User 6', role: 'user' },
-  { email: 'user7@solartis.com', password: 'user123', name: 'User 7', role: 'user' },
-  { email: 'user8@solartis.com', password: 'user123', name: 'User 8', role: 'user' },
-  { email: 'user9@solartis.com', password: 'user123', name: 'User 9', role: 'user' }
+  { email: 'admin@solartis.com', password: 'Solartis@2026', name: 'Admin User', role: 'admin' },
+  { email: 'S5599@solartis.com', password: 'S5599', name: 'R Sarojini', role: 'user' },
+  { email: 'S5848@solartis.com', password: 'S5848', name: 'C G Aarthy', role: 'user' },
+  { email: 'S6312@solartis.com', password: 'S6312', name: 'Nithya K', role: 'user' },
+  { email: 'S6437@solartis.com', password: 'S6437', name: 'Varsha', role: 'user' },
+  { email: 'S7266@solartis.com', password: 'S7266', name: 'Sanjay B', role: 'user' },
+  { email: 'S7268@solartis.com', password: 'S7268', name: 'Vijayarajan Ravichandran', role: 'user' },
+  { email: 'S7270@solartis.com', password: 'S7270', name: 'Gowsikan S', role: 'user' },
+  { email: 'S7282@solartis.com', password: 'S7282', name: 'Arsat Barvezh R', role: 'user' },
+  { email: 'S7284@solartis.com', password: 'S7284', name: 'Sam Nihil David D P', role: 'user' },
+  { email: 'S7286@solartis.com', password: 'S7286', name: 'Dineshkumar Arumugam', role: 'user' },
+  { email: 'S7289@solartis.com', password: 'S7289', name: 'Manivarma R', role: 'user' },
+  { email: 'S7308@solartis.com', password: 'S7308', name: 'S Santhiya', role: 'user' },
+  { email: 'S7310@solartis.com', password: 'S7310', name: 'Susil Kanth K', role: 'user' },
+  { email: 'S7313@solartis.com', password: 'S7313', name: 'Jothibasu Ramasubbu', role: 'user' },
+  { email: 'S7314@solartis.com', password: 'S7314', name: 'Aravindan M', role: 'user' },
+  { email: 'S7315@solartis.com', password: 'S7315', name: 'Nagasree', role: 'user' },
+  { email: 'S7316@solartis.com', password: 'S7316', name: 'Abdul Malik Pope Sikkandar Ali', role: 'user' },
+  { email: 'S7325@solartis.com', password: 'S7325', name: 'Sabariswaran K N', role: 'user' },
+  { email: 'S7321@solartis.com', password: 'S7321', name: 'Siva Ranjani R', role: 'user' },
+  { email: 'S7322@solartis.com', password: 'S7322', name: 'Divya Shree Varatharajan', role: 'user' },
+  { email: 'S7324@solartis.com', password: 'S7324', name: 'Gokul Sivakumar', role: 'user' },
+  { email: 'S7335@solartis.com', password: 'S7335', name: 'Thendral Devi K', role: 'user' },
+  { email: 'S7336@solartis.com', password: 'S7336', name: 'Balaji M', role: 'user' },
+  { email: 'S7339@solartis.com', password: 'S7339', name: 'Gosakan N', role: 'user' },
+  { email: 'S7337@solartis.com', password: 'S7337', name: 'Mohammed Asraf Ali A', role: 'user' },
+  { email: 'S7340@solartis.com', password: 'S7340', name: 'Ramsurya Manavalan', role: 'user' },
+  { email: 'S7338@solartis.com', password: 'S7338', name: 'Jeeveetha S', role: 'user' },
+  { email: 'S7343@solartis.com', password: 'S7343', name: 'Shreenithy R G', role: 'user' },
+  { email: 'S7344@solartis.com', password: 'S7344', name: 'Vetrikaruparr M', role: 'user' },
+  { email: 'S7345@solartis.com', password: 'S7345', name: 'Rajaaruna S', role: 'user' },
+  { email: 'S7346@solartis.com', password: 'S7346', name: 'Sankaranarayanan Sanjivi Ramesh', role: 'user' },
+  { email: 'S7347@solartis.com', password: 'S7347', name: 'Karishma E', role: 'user' },
+  { email: 'S7352@solartis.com', password: 'S7352', name: 'Atchaya S', role: 'user' },
+  { email: 'S7355@solartis.com', password: 'S7355', name: 'Swethaa D', role: 'user' },
+  { email: 'S7356@solartis.com', password: 'S7356', name: 'Swetha Veeraragavan', role: 'user' },
+  { email: 'S7357@solartis.com', password: 'S7357', name: 'Santhanakumar S', role: 'user' },
+  { email: 'S7358@solartis.com', password: 'S7358', name: 'Iswarya T N', role: 'user' },
+  { email: 'S7248@solartis.com', password: 'S7248', name: 'B Tharunika', role: 'user' },
+  { email: 'S7276@solartis.com', password: 'S7276', name: 'Gopinath J', role: 'user' },
+  { email: 'S7277@solartis.com', password: 'S7277', name: 'Parthipan Manikandan', role: 'user' },
+  { email: 'S7280@solartis.com', password: 'S7280', name: 'C A Anuppriya', role: 'user' },
+  { email: 'S7281@solartis.com', password: 'S7281', name: 'Thirunavukkarasu Rangasamy', role: 'user' },
+  { email: 'S7294@solartis.com', password: 'S7294', name: 'Devadharshini J', role: 'user' },
+  { email: 'S7295@solartis.com', password: 'S7295', name: 'Kowsalya Jayaraman', role: 'user' },
+  { email: 'S7297@solartis.com', password: 'S7297', name: 'Swetha Mohanraj', role: 'user' },
+  { email: 'S7298@solartis.com', password: 'S7298', name: 'Sowmiya Saravanan', role: 'user' },
+  { email: 'S7299@solartis.com', password: 'S7299', name: 'Krithika Selvaraju', role: 'user' },
+  { email: 'S7305@solartis.com', password: 'S7305', name: 'Afreen', role: 'user' },
+  { email: 'S7318@solartis.com', password: 'S7318', name: 'Balakumar G', role: 'user' },
+  { email: 'S7319@solartis.com', password: 'S7319', name: 'Surandhar M', role: 'user' },
+  { email: 'S7320@solartis.com', password: 'S7320', name: 'Boomika Nagaraj', role: 'user' },
+  { email: 'S7327@solartis.com', password: 'S7327', name: 'Swathi S', role: 'user' },
+  { email: 'S7333@solartis.com', password: 'S7333', name: 'S Subin', role: 'user' },
+  { email: 'S7331@solartis.com', password: 'S7331', name: 'Logeshwaran V', role: 'user' },
+  { email: 'S7349@solartis.com', password: 'S7349', name: 'Sivakumar S', role: 'user' },
+  { email: 'S7350@solartis.com', password: 'S7350', name: 'S Kiruba', role: 'user' },
+  { email: 'S7351@solartis.com', password: 'S7351', name: 'Sandeep.V', role: 'user' },
+  { email: 'S7354@solartis.com', password: 'S7354', name: 'Aadhil Rasheeq A', role: 'user' },
+  { email: 'S6246@solartis.com', password: 'S6246', name: 'Manikandan K', role: 'user' },
+  { email: 'S6143@solartis.com', password: 'S6143', name: 'Moorthy', role: 'team-lead' },
+  { email: 'S1759@solartis.com', password: 'S1759', name: 'OviyaRajan', role: 'team-lead' },
+  { email: 'S7342@solartis.com', password: 'S7342', name: 'Jegadish Ramesh', role: 'team-lead' },
+  { email: 'S7317@solartis.com', password: 'S7317', name: 'Sabarishkumar', role: 'team-lead' }
 ];
 
 const App = () => {
@@ -193,13 +247,16 @@ useEffect(() => {
     setLoginError('');
 
     if (!loginEmail || !loginPassword) {
-      setLoginError('Please enter both email and password');
+      setLoginError('Please enter both Workforce ID (or email) and password');
       return;
     }
 
-    const user = VALID_CREDENTIALS.find(
-      cred => cred.email.toLowerCase() === loginEmail.toLowerCase() && cred.password === loginPassword
-    );
+    const entered = loginEmail.trim().toLowerCase();
+    const user = VALID_CREDENTIALS.find(cred => {
+      const emailLower = cred.email.toLowerCase();
+      const id = emailLower.split('@')[0];
+      return (emailLower === entered || id === entered) && cred.password === loginPassword;
+    });
 
     if (user) {
       const loginTime = new Date();
@@ -657,10 +714,10 @@ const submitQuiz = () => {
           
           <form onSubmit={handleLogin}>
             <div className="mb-4">
-              <label className="block text-sm font-semibold mb-2 text-gray-700">Email Address</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Workforce ID or Email</label>
               <input
-                type="email"
-                placeholder="Enter your email"
+                type="text"
+                placeholder="Enter your Workforce ID (e.g., S5599) or email"
                 value={loginEmail}
                 onChange={(e) => {
                   setLoginEmail(e.target.value);
