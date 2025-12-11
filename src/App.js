@@ -50,6 +50,14 @@ const App = () => {
 const [aiEnabled, setAiEnabled] = useState(false);
 const [aiProvider, setAiProvider] = useState('');
   
+  // Quiz state management
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizScore, setQuizScore] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(45);
+  const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [questionTimings, setQuestionTimings] = useState({});
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -144,6 +152,25 @@ useEffect(() => {
       setIsListening(false);
     }
   };
+
+  // Timer effect for quiz questions
+  useEffect(() => {
+    // Only run timer if quiz is active and not completed
+    if (quizCompleted || currentQuizQuestions.length === 0 || !questionStartTime) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [quizCompleted, currentQuizQuestions.length, questionStartTime]);
 
   const logActivity = (activityType, details = {}) => {
     if (!currentUser) return;
@@ -380,6 +407,111 @@ const retakeQuiz = async () => {
   } finally {
     setLoading(false);
   }
+};
+
+/**
+ * Start the quiz - initialize first question and timer
+ */
+const startQuiz = () => {
+  setCurrentQuestionIndex(0);
+  setQuizCompleted(false);
+  setQuizScore(null);
+  setQuizAnswers({});
+  setQuestionStartTime(Date.now());
+  setTimeLeft(45);
+  setQuestionTimings({});
+};
+
+/**
+ * Handle answer selection for current question
+ */
+const handleAnswerSelect = (questionIdx, optionIdx) => {
+  setQuizAnswers(prev => ({
+    ...prev,
+    [questionIdx]: optionIdx
+  }));
+};
+
+/**
+ * Move to next question with timer penalty calculation
+ */
+const handleContinueToNext = () => {
+  // Record timing for current question
+  const elapsedTime = Math.floor((Date.now() - questionStartTime) / 1000);
+  setQuestionTimings(prev => ({
+    ...prev,
+    [currentQuestionIndex]: elapsedTime
+  }));
+
+  // Check if this is the last question
+  if (currentQuestionIndex < currentQuizQuestions.length - 1) {
+    // Move to next question
+    setCurrentQuestionIndex(prev => prev + 1);
+    setQuestionStartTime(Date.now());
+    setTimeLeft(45);
+  } else {
+    // Quiz finished - calculate final score
+    submitQuiz();
+  }
+};
+
+/**
+ * Submit quiz and calculate score with time penalties
+ */
+const submitQuiz = () => {
+  let totalScore = 0;
+  let correctCount = 0;
+
+  currentQuizQuestions.forEach((question, idx) => {
+    const selectedAnswer = quizAnswers[idx];
+    const isCorrect = selectedAnswer === question.correct;
+    const timeTaken = questionTimings[idx] || 0;
+
+    if (isCorrect) {
+      correctCount++;
+      
+      // Full marks (10 points) if within 45 seconds
+      if (timeTaken <= 45) {
+        totalScore += 10;
+      } else {
+        // Reduced marks if exceeded 45 seconds
+        // Deduct 0.5 points per extra second (minimum 2 points)
+        const penalty = Math.min((timeTaken - 45) * 0.5, 8);
+        const score = Math.max(10 - penalty, 2);
+        totalScore += score;
+      }
+    } else {
+      // Wrong answer - no points, but timer penalty doesn't apply
+      totalScore += 0;
+    }
+  });
+
+  const maxScore = currentQuizQuestions.length * 10;
+  const percentage = (totalScore / maxScore) * 100;
+
+  const finalScore = {
+    totalScore: Math.round(totalScore * 10) / 10, // Round to 1 decimal
+    maxScore: maxScore,
+    correct: correctCount,
+    percentage: percentage,
+    totalQuestions: currentQuizQuestions.length
+  };
+
+  setQuizScore(finalScore);
+  setQuizCompleted(true);
+
+  // Log activity with detailed scoring
+  logActivity('quiz_completed', {
+    sopId: selectedSOP,
+    sopName: sopDatabase[selectedSOP].name,
+    score: `${correctCount}/${currentQuizQuestions.length}`,
+    totalScore: finalScore.totalScore,
+    maxScore: maxScore,
+    percentage: `${percentage.toFixed(1)}%`,
+    totalQuestions: currentQuizQuestions.length,
+    correctAnswers: correctCount,
+    aiGenerated: aiEnabled
+  });
 };
 
   const handleDeleteSOP = (sopId) => {
