@@ -94,7 +94,14 @@ const App = () => {
   const [sopStartTime, setSOPStartTime] = useState(null);
   const [userActivities, setUserActivities] = useState(() => {
     const saved = localStorage.getItem('userActivities');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.warn('Failed to parse userActivities from localStorage, resetting to []', e);
+      return [];
+    }
   });
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
