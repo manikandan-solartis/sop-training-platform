@@ -1458,4 +1458,43 @@ const submitQuiz = () => {
   );
 };
 
-export default App;
+// Error boundary to surface rendering errors (helps diagnose white/blank screens)
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('Uncaught error in App render:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-red-50 flex items-center justify-center p-6">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl">
+            <h2 className="text-xl font-bold mb-4">Something went wrong</h2>
+            <p className="text-sm text-gray-700 mb-2">The application encountered an error while rendering. Details:</p>
+            <pre className="text-xs text-red-700 whitespace-pre-wrap">{String(this.state.error)}</pre>
+            <p className="text-xs text-gray-500 mt-4">Check the browser console for a full stack trace.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default function AppWithBoundary() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
