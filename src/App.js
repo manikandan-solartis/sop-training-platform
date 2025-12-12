@@ -768,7 +768,8 @@ const submitQuiz = () => {
   }
 
   if (currentView === 'analytics') {
-    const allUsers = VALID_CREDENTIALS.filter(u => u.role === 'user');
+    // Count all non-admin accounts (users + team-leads) so admin sees full workforce
+    const allUsers = VALID_CREDENTIALS.filter(u => u.role !== 'admin');
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -846,6 +847,7 @@ const submitQuiz = () => {
                 <thead>
                   <tr className="border-b-2 border-gray-200">
                     <th className="text-left py-3 px-4 font-semibold text-gray-700">User</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Role</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700">SOPs Accessed</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700">Quizzes Taken</th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700">Avg Score</th>
@@ -865,6 +867,7 @@ const submitQuiz = () => {
                             <p className="text-xs text-gray-500">{user.email}</p>
                           </div>
                         </td>
+                        <td className="py-3 px-4 text-gray-700">{user.role}</td>
                         <td className="py-3 px-4 text-gray-700">{stats.totalSOPsAccessed}</td>
                         <td className="py-3 px-4 text-gray-700">{stats.totalQuizzes}</td>
                         <td className="py-3 px-4">
