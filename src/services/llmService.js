@@ -137,12 +137,14 @@ export const generateQuizQuestions = async (sopContent, numQuestions = 10) => {
   }
   
   try {
-    const systemPrompt = `You are a quiz generator. Create ${numQuestions} multiple choice questions based on the SOP content. Return ONLY valid JSON array with this exact format:
+    const systemPrompt = `You are a quiz generator. Create ${numQuestions} multiple choice questions based on the SOP content. PRIORITIZE scenario-based, decision-making questions that require applying the SOP in realistic situations. Avoid questions that only ask "Which step number" or "What is step X". Instead, present a short scenario or decision point and ask what action or escalation should be taken. Provide diverse questions covering exceptions, escalations, SLAs, and process rationale. Keep questions clear and professional. Return ONLY valid JSON array with this exact format:
 [{"q":"Question text?","options":["Option A","Option B","Option C","Option D"],"correct":0}]
 
 Rules:
 - correct is index 0-3 for options array
 - Questions must be specific to the SOP content
+- Prefer scenario-based wording (e.g., "If X occurs, what is the correct action?")
+- Avoid direct step-number questions ("What is step 2?")
 - Options should be plausible
 - Return ONLY the JSON array, no other text`;
 
@@ -150,7 +152,7 @@ Rules:
       model: config.model,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Generate ${numQuestions} quiz questions from this SOP:\n\n${sopContent.substring(0, 4000)}` }
+        { role: 'user', content: `Generate ${numQuestions} quiz questions from this SOP:\n\n${sopContent.substring(0, 4000)}\n\nIMPORTANT: Do NOT ask direct step-number questions (e.g., 'What is step 2?'). Use scenario-based wording like 'If X occurs, what is the correct action?'` }
       ],
       max_tokens: 2000,
       temperature: 0.7,
@@ -204,8 +206,63 @@ Rules:
     if (validQuestions.length === 0) {
       throw new Error('No valid questions generated');
     }
-    
-    return validQuestions.slice(0, numQuestions);
+
+    // Filter out 'step number' questions (e.g., "What is step 2?")
+    const isStepQuestion = (text) => /step\s*\d+/i.test(String(text || ''));
+    const nonStepQuestions = validQuestions.filter(q => !isStepQuestion(q.q));
+
+    // If we don't have enough non-step questions, attempt to fetch additional questions once
+    if (nonStepQuestions.length < numQuestions) {
+      const needed = numQuestions - nonStepQuestions.length;
+
+      // Attempt a second, stricter generation request
+      const followupRequest = {
+        model: config.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Please generate ${needed} additional quiz questions from the SOP, and DO NOT include any 'step number' questions (e.g., avoid 'What is step 2?'). Use scenario-based wording.` }
+        ],
+        max_tokens: 1200,
+        temperature: 0.75,
+      };
+
+      const followupResp = await fetch(config.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`
+        },
+        body: JSON.stringify(followupRequest)
+      });
+
+      if (followupResp.ok) {
+        const followupData = await followupResp.json();
+        const followupContent = followupData.choices?.[0]?.message?.content || '';
+        let followupJsonStr = followupContent.trim();
+        followupJsonStr = followupJsonStr.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+        const followupMatch = followupJsonStr.match(/\[[\s\S]*\]/);
+        if (followupMatch) followupJsonStr = followupMatch[0];
+        try {
+          const followupQuestions = JSON.parse(followupJsonStr);
+          const followupValid = Array.isArray(followupQuestions)
+            ? followupQuestions.filter(q => q.q && Array.isArray(q.options) && q.options.length === 4 && typeof q.correct === 'number')
+            : [];
+          const followupFiltered = followupValid.filter(q => !isStepQuestion(q.q));
+          // Merge unique questions from followup into nonStepQuestions
+          followupFiltered.forEach(q => {
+            if (!nonStepQuestions.some(existing => existing.q === q.q)) {
+              nonStepQuestions.push(q);
+            }
+          });
+        } catch (e) {
+          // If parsing fails, ignore and proceed with existing nonStepQuestions
+          console.warn('Failed to parse followup questions', e);
+        }
+      }
+    }
+
+    // Return up to the requested number of questions (non-step prioritized)
+    return nonStepQuestions.slice(0, numQuestions);
     
   } catch (error) {
     console.error('Quiz Generation Error:', error);
